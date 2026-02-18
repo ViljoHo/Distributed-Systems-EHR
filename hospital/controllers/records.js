@@ -10,9 +10,14 @@ router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 
             return res.status(404).json({ error: 'patient not found' })
         }
 
+        const provider = await Provider.findOne({ where: { email: req.decodedToken.email } })
+        if (!provider) {
+            return res.status(400).json({ error: 'provider profile not found' })
+        }
+
         const record = await MedicalRecord.create({
             patient_id: req.params.patient_id,
-            provider_id: req.decodedToken.id,
+            provider_id: provider.provider_id,
             diagnosis: req.body.diagnosis,
             treatment: req.body.treatment,
             notes: req.body.notes,
@@ -24,7 +29,7 @@ router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 
     }
 })
 
-router.get('/', middleware.tokenExtractor, middleware.selfOrRole('patient', 'patient_id', ['DOCTOR', 'NURSE', 'ADMIN']), async (req, res) => {
+router.get('/', middleware.tokenExtractor, middleware.selfOrRole('patient_id', ['DOCTOR', 'NURSE', 'ADMIN']), async (req, res) => {
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 20
     const offset = (page - 1) * limit

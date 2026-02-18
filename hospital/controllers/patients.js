@@ -13,12 +13,9 @@ router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 
             gender: req.body.gender,
             phone: req.body.phone,
             email: req.body.email,
-            password_hash: req.body.password,
             blood_type: req.body.blood_type
         })
-        const patientJson = patient.toJSON()
-        delete patientJson.password_hash
-        res.status(201).json(patientJson)
+        res.status(201).json(patient)
     } catch (error) {
         return res.status(400).json({ error: error.message })
     }
@@ -39,7 +36,6 @@ router.get('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', '
     const offset = (page - 1) * limit
 
     const patients = await Patient.findAll({
-        attributes: { exclude: ['password_hash'] },
         where,
         limit,
         offset
@@ -47,10 +43,8 @@ router.get('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', '
     res.json(patients)
 })
 
-router.get('/:patient_id', middleware.tokenExtractor, middleware.selfOrRole('patient', 'patient_id', ['DOCTOR', 'NURSE', 'ADMIN']), async (req, res) => {
-    const patient = await Patient.findByPk(req.params.patient_id, {
-        attributes: { exclude: ['password_hash'] }
-    })
+router.get('/:patient_id', middleware.tokenExtractor, middleware.selfOrRole('patient_id', ['DOCTOR', 'NURSE', 'ADMIN']), async (req, res) => {
+    const patient = await Patient.findByPk(req.params.patient_id)
     if (patient) {
         res.json(patient)
     } else {
@@ -58,7 +52,7 @@ router.get('/:patient_id', middleware.tokenExtractor, middleware.selfOrRole('pat
     }
 })
 
-router.put('/:patient_id', middleware.tokenExtractor, middleware.selfOrRole('patient', 'patient_id', ['DOCTOR', 'ADMIN']), async (req, res) => {
+router.put('/:patient_id', middleware.tokenExtractor, middleware.selfOrRole('patient_id', ['DOCTOR', 'ADMIN']), async (req, res) => {
     const patient = await Patient.findByPk(req.params.patient_id)
 
     if (patient) {
@@ -68,9 +62,7 @@ router.put('/:patient_id', middleware.tokenExtractor, middleware.selfOrRole('pat
         if (req.body.email !== undefined) patient.email = req.body.email
         if (req.body.blood_type !== undefined) patient.blood_type = req.body.blood_type
         await patient.save()
-        const patientJson = patient.toJSON()
-        delete patientJson.password_hash
-        res.json(patientJson)
+        res.json(patient)
     } else {
         res.status(404).end()
     }

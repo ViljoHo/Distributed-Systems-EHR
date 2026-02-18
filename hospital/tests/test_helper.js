@@ -1,17 +1,17 @@
+const jwt = require('jsonwebtoken')
 const { Patient, Provider, MedicalRecord } = require('../models')
+const { SECRET } = require('../util/config')
 
 const initialProvider = {
     name: 'Dr. Test',
     role: 'DOCTOR',
-    email: 'doctor@test.com',
-    password_hash: 'testpassword'
+    email: 'doctor@test.com'
 }
 
 const initialAdmin = {
     name: 'Admin User',
     role: 'ADMIN',
-    email: 'admin@test.com',
-    password_hash: 'adminpassword'
+    email: 'admin@test.com'
 }
 
 const initialPatient = {
@@ -21,8 +21,25 @@ const initialPatient = {
     gender: 'MALE',
     phone: '1234567890',
     email: 'patient@test.com',
-    password_hash: 'patientpassword',
     blood_type: 'A+'
+}
+
+const getProviderToken = (provider) => {
+    const tokenPayload = {
+        user_id: 'test-user-id',
+        email: provider.email,
+        role: provider.role
+    }
+    return `Bearer ${jwt.sign(tokenPayload, SECRET, { expiresIn: '30m' })}`
+}
+
+const getPatientToken = (patient) => {
+    const tokenPayload = {
+        user_id: patient.user_id || 'test-patient-user-id',
+        email: patient.email,
+        role: 'PATIENT'
+    }
+    return `Bearer ${jwt.sign(tokenPayload, SECRET, { expiresIn: '30m' })}`
 }
 
 const patientsInDb = async () => {
@@ -44,6 +61,8 @@ module.exports = {
     initialProvider,
     initialAdmin,
     initialPatient,
+    getProviderToken,
+    getPatientToken,
     patientsInDb,
     providersInDb,
     recordsInDb

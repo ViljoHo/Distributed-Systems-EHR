@@ -35,9 +35,10 @@ Patient.init({
         allowNull: false,
         unique: true
     },
-    password_hash: {
-        type: DataTypes.STRING,
-        allowNull: false
+    user_id: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        unique: true
     },
     blood_type: {
         type: DataTypes.ENUM('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'),

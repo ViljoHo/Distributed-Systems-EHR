@@ -1,7 +1,19 @@
 const jwt = require('jsonwebtoken')
-const { SECRET } = require('./config.js')
+const { SECRET, DEV_MODE } = require('./config.js')
+const { Patient } = require('../models')
+
+const devToken = {
+  user_id: 'dev-user-id',
+  email: 'dev@test.com',
+  role: 'ADMIN'
+}
 
 const tokenExtractor = (req, res, next) => {
+  if (DEV_MODE) {
+    req.decodedToken = devToken
+    return next()
+  }
+
   const authorization = req.get('authorization')
   if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
     try {
@@ -18,29 +30,30 @@ const tokenExtractor = (req, res, next) => {
 const roleExtractor = (allowedRoles) => {
   return (req, res, next) => {
     const token = req.decodedToken
-    if (token.type === 'provider' && allowedRoles.includes(token.role)) {
+    if (allowedRoles.includes(token.role)) {
       return next()
     }
     return res.status(403).json({ error: 'operation not permitted' })
   }
 }
 
-const selfOrRole = (tokenType, paramName, allowedRoles) => {
-  return (req, res, next) => {
+const selfOrRole = (paramName, allowedRoles) => {
+  return async (req, res, next) => {
     const token = req.decodedToken
-    if (token.type === 'provider' && allowedRoles.includes(token.role)) {
+    if (allowedRoles.includes(token.role) && token.role !== 'PATIENT') {
       return next()
     }
-    if (token.type === tokenType && token.id === req.params[paramName]) {
-      return next()
+    if (token.role === 'PATIENT') {
+      const patient = await Patient.findByPk(req.params[paramName])
+      if (patient && patient.user_id === token.user_id) {
+        return next()
+      }
     }
     return res.status(403).json({ error: 'operation not permitted' })
   }
 }
 
 const errorHandler = (error, request, response, next) => {
-  //logger.error(error.message)
-
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
   } else if (error.name === 'ValidationError') {
@@ -56,7 +69,6 @@ const errorHandler = (error, request, response, next) => {
       error: 'token expired'
     })
   }
-
 
   next(error)
 }

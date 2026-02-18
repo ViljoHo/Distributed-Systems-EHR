@@ -17,19 +17,12 @@ describe('records api', () => {
         await Patient.destroy({ where: {} })
         await Provider.destroy({ where: {} })
 
-        await Provider.create(helper.initialProvider)
-        await Provider.create(helper.initialAdmin)
+        const provider = await Provider.create(helper.initialProvider)
+        const admin = await Provider.create(helper.initialAdmin)
         testPatient = await Patient.create(helper.initialPatient)
 
-        const doctorLogin = await api
-            .post('/api/v1/auth/provider/login')
-            .send({ email: helper.initialProvider.email, password: helper.initialProvider.password_hash })
-        providerToken = `Bearer ${doctorLogin.body.token}`
-
-        const adminLogin = await api
-            .post('/api/v1/auth/provider/login')
-            .send({ email: helper.initialAdmin.email, password: helper.initialAdmin.password_hash })
-        adminToken = `Bearer ${adminLogin.body.token}`
+        providerToken = helper.getProviderToken(provider)
+        adminToken = helper.getProviderToken(admin)
     })
 
     test('create a medical record', async () => {

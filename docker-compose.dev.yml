@@ -1,0 +1,66 @@
+services:
+
+  hospital:
+    build:
+      context: ./hospital
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ./hospital/:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db:5432/postgres
+      - PORT=3000
+      - SECRET=salaisuus
+    depends_on:
+      - hospital-db
+
+  auth:
+    build:
+      context: ./auth
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ./auth/:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - DATABASE_URL=postgres://postgres:mysecretpassword@auth-db:5432/postgres
+      - PORT=3001
+      - SECRET=salaisuus
+    depends_on:
+      - auth-db
+
+  hospital-db:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=mysecretpassword
+    volumes:
+      - hospital_data:/var/lib/postgresql
+    container_name: hospital-db
+
+  auth-db:
+    image: postgres
+    ports:
+      - 5433:5432
+    environment:
+      - POSTGRES_PASSWORD=mysecretpassword
+    volumes:
+      - auth_data:/var/lib/postgresql
+    container_name: auth-db
+
+  nginx:
+    image: nginx:1.20.1
+    volumes:
+      - ./nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - 8080:80
+    container_name: reverse-proxy
+    depends_on:
+      - hospital
+      - auth
+
+volumes:
+  hospital_data:
+    name: "hospital-dev-postgres-volume-v2"
+  auth_data:
+    name: "auth-dev-postgres-volume-v2"

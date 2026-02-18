@@ -1,0 +1,165 @@
+system: Single Hospital EHR
+version: 1.0
+auth: JWT Bearer Token
+
+models:
+
+  Patient:
+    table: patients
+    fields:
+      patient_id:    { type: UUID,    primary_key: true, auto_generate: true }
+      first_name:    { type: STRING,  required: true }
+      last_name:     { type: STRING,  required: true }
+      date_of_birth: { type: DATE,    required: true }
+      gender:        { type: ENUM,    values: [MALE, FEMALE, OTHER], required: true }
+      phone:         { type: STRING,  required: false }
+      email:         { type: STRING,  required: true, unique: true }
+      password_hash: { type: STRING,  required: true, hidden: true }
+      blood_type:    { type: ENUM,    values: [A+, A-, B+, B-, AB+, AB-, O+, O-], required: false }
+      created_at:    { type: DATETIME, auto: true }
+      updated_at:    { type: DATETIME, auto: true }
+    soft_delete: false
+
+  Provider:
+    table: providers
+    fields:
+      provider_id:   { type: UUID,    primary_key: true, auto_generate: true }
+      name:          { type: STRING,  required: true }
+      role:          { type: ENUM,    values: [DOCTOR, NURSE, ADMIN], required: true }
+      email:         { type: STRING,  required: true, unique: true }
+      password_hash: { type: STRING,  required: true, hidden: true }
+      created_at:    { type: DATETIME, auto: true }
+      updated_at:    { type: DATETIME, auto: true }
+    soft_delete: false
+
+  MedicalRecord:
+    table: medical_records
+    fields:
+      record_id:   { type: UUID,    primary_key: true, auto_generate: true }
+      patient_id:  { type: UUID,    foreign_key: patients.patient_id, required: true }
+      provider_id: { type: UUID,    foreign_key: providers.provider_id, required: true }
+      diagnosis:   { type: TEXT,    required: true }
+      treatment:   { type: TEXT,    required: false }
+      notes:       { type: TEXT,    required: false }
+      visit_date:  { type: DATE,    required: true }
+      created_at:  { type: DATETIME, auto: true }
+      updated_at:  { type: DATETIME, auto: true }
+    soft_delete: false
+
+relationships:
+  - Patient has_many MedicalRecords via patient_id
+  - Provider has_many MedicalRecords via provider_id
+
+endpoints:
+
+  auth:
+    - id: patient_login
+      method: POST
+      path: /api/v1/auth/patient/login
+      description: Patient login, returns JWT
+      auth_required: false
+      body: { email: STRING, password: STRING }
+      returns: { token: JWT, patient_id: UUID }
+
+    - id: provider_login
+      method: POST
+      path: /api/v1/auth/provider/login
+      description: Provider login, returns JWT
+      auth_required: false
+      body: { email: STRING, password: STRING }
+      returns: { token: JWT, provider_id: UUID, role: ENUM }
+
+    - id: logout
+      method: POST
+      path: /api/v1/auth/logout
+      description: Invalidate JWT token
+      auth_required: true
+      returns: { message: STRING }
+
+  patients:
+    - id: create_patient
+      method: POST
+      path: /api/v1/patients
+      description: Register a new patient
+      auth_required: true
+      allowed_roles: [DOCTOR, NURSE, ADMIN]
+      body: { first_name, last_name, date_of_birth, gender, phone, email, password, blood_type }
+      returns: Patient
+
+    - id: list_patients
+      method: GET
+      path: /api/v1/patients
+      description: Get all patients
+      auth_required: true
+      allowed_roles: [DOCTOR, NURSE, ADMIN]
+      query_params: { page: INT, limit: INT, search: STRING }
+      returns: Patient[]
+
+    - id: get_patient
+      method: GET
+      path: /api/v1/patients/:patient_id
+      description: Get a single patient by ID
+      auth_required: true
+      allowed_roles: [DOCTOR, NURSE, ADMIN, PATIENT(self only)]
+      returns: Patient
+
+    - id: update_patient
+      method: PUT
+      path: /api/v1/patients/:patient_id
+      description: Update patient details
+      auth_required: true
+      allowed_roles: [DOCTOR, ADMIN, PATIENT(self only)]
+      body: { first_name, last_name, phone, email, blood_type }
+      returns: Patient
+
+    - id: delete_patient
+      method: DELETE
+      path: /api/v1/patients/:patient_id
+      description: Delete a patient record
+      auth_required: true
+      allowed_roles: [ADMIN]
+      returns: { message: STRING }
+
+  medical_records:
+    - id: create_record
+      method: POST
+      path: /api/v1/patients/:patient_id/records
+      description: Create a medical record for a patient
+      auth_required: true
+      allowed_roles: [DOCTOR, NURSE]
+      body: { diagnosis, treatment, notes, visit_date }
+      returns: MedicalRecord
+
+    - id: list_records
+      method: GET
+      path: /api/v1/patients/:patient_id/records
+      description: Get all medical records for a patient
+      auth_required: true
+      allowed_roles: [DOCTOR, NURSE, ADMIN, PATIENT(self only)]
+      query_params: { page: INT, limit: INT }
+      returns: MedicalRecord[]
+
+    - id: get_record
+      method: GET
+      path: /api/v1/records/:record_id
+      description: Get a single medical record
+      auth_required: true
+      allowed_roles: [DOCTOR, NURSE, ADMIN, PATIENT(self only)]
+      returns: MedicalRecord
+
+    - id: update_record
+      method: PUT
+      path: /api/v1/records/:record_id
+      description: Update a medical record
+      auth_required: true
+      allowed_roles: [DOCTOR]
+      body: { diagnosis, treatment, notes, visit_date }
+      returns: MedicalRecord
+
+    - id: delete_record
+      method: DELETE
+      path: /api/v1/records/:record_id
+      description: Delete a medical record
+      auth_required: true
+      allowed_roles: [ADMIN]
+      returns: { message: STRING }

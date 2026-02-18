@@ -6,7 +6,7 @@ const { MedicalRecord, Patient, Provider } = require('../models')
 const recordFinder = async (req, res, next) => {
     req.record = await MedicalRecord.findByPk(req.params.record_id, {
         include: [
-            { model: Patient, attributes: ['patient_id', 'first_name', 'last_name'] },
+            { model: Patient, attributes: ['patient_id', 'first_name', 'last_name', 'user_id'] },
             { model: Provider, attributes: ['provider_id', 'name', 'role'] }
         ]
     })
@@ -19,7 +19,7 @@ router.get('/:record_id', middleware.tokenExtractor, recordFinder, async (req, r
     }
 
     const token = req.decodedToken
-    if (token.type === 'patient' && req.record.patient_id !== token.id) {
+    if (token.role === 'PATIENT' && (!req.record.patient || req.record.patient.user_id !== token.user_id)) {
         return res.status(403).json({ error: 'access denied' })
     }
 

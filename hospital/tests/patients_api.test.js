@@ -15,18 +15,11 @@ describe('patients api', () => {
         await Patient.destroy({ where: {} })
         await Provider.destroy({ where: {} })
 
-        await Provider.create(helper.initialProvider)
-        await Provider.create(helper.initialAdmin)
+        const provider = await Provider.create(helper.initialProvider)
+        const admin = await Provider.create(helper.initialAdmin)
 
-        const doctorLogin = await api
-            .post('/api/v1/auth/provider/login')
-            .send({ email: helper.initialProvider.email, password: helper.initialProvider.password_hash })
-        providerToken = `Bearer ${doctorLogin.body.token}`
-
-        const adminLogin = await api
-            .post('/api/v1/auth/provider/login')
-            .send({ email: helper.initialAdmin.email, password: helper.initialAdmin.password_hash })
-        adminToken = `Bearer ${adminLogin.body.token}`
+        providerToken = helper.getProviderToken(provider)
+        adminToken = helper.getProviderToken(admin)
     })
 
     test('create a new patient', async () => {
@@ -37,7 +30,6 @@ describe('patients api', () => {
             gender: 'FEMALE',
             phone: '0501234567',
             email: 'jane@test.com',
-            password: 'janepassword',
             blood_type: 'O+'
         }
 
@@ -50,7 +42,6 @@ describe('patients api', () => {
 
         assert.strictEqual(response.body.first_name, 'Jane')
         assert.strictEqual(response.body.last_name, 'Doe')
-        assert.strictEqual(response.body.password_hash, undefined)
     })
 
     test('create patient without token fails', async () => {
@@ -59,8 +50,7 @@ describe('patients api', () => {
             last_name: 'Doe',
             date_of_birth: '1985-05-15',
             gender: 'FEMALE',
-            email: 'jane@test.com',
-            password: 'janepassword'
+            email: 'jane@test.com'
         }
 
         await api
@@ -79,7 +69,6 @@ describe('patients api', () => {
             .expect('Content-Type', /application\/json/)
 
         assert.strictEqual(response.body.length, 1)
-        assert.strictEqual(response.body[0].password_hash, undefined)
     })
 
     test('get patient by id', async () => {
