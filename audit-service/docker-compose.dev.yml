@@ -1,0 +1,27 @@
+services:
+  audit-service:
+    build:
+      context: .
+    ports:
+      - 5004:5004
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:mysecretpassword@postgres:5432/audit_service
+    command: sh -c "flask --app=audit_api init-db && gunicorn --bind 0.0.0.0:5004 --workers 2 app:app"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres
+    ports:
+      - 5435:5432
+    environment:
+      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_DB=audit_service
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+volumes:
+  postgres_data:
+    name: "audit-service-dev-postgres-volume"

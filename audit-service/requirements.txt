@@ -1,0 +1,11 @@
+Flask==3.1.2
+flask-restful==0.3.10
+flask-sqlalchemy==3.1.1
+jsonschema==4.26.0
+rfc3339-validator==0.1.4
+SQLAlchemy==2.0.46
+python-dotenv==1.0.1
+PyJWT==2.10.1
+psycopg2-binary==2.9.10
+gunicorn==23.0.0
+pytest==9.0.2

@@ -1,0 +1,2 @@
+graft audit_api/static
+global-exclude *.pyc
