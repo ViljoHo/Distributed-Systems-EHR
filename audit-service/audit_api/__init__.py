@@ -45,7 +45,6 @@ def create_app(test_config=None):
     app.register_blueprint(api.api_bp)
     app.cli.add_command(models.init_db_command)
     app.cli.add_command(models.reset_db_command)
-    register_request_hooks(app)
 
     # Convert HTTP error responses to JSON
     @app.errorhandler(HTTPException)

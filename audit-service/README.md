@@ -8,9 +8,9 @@
 - `GET /internal/v1/audit/events/<event_id>/`
 - `GET /internal/v1/audit/patients/<patient_id>/timeline/`
 
+`GET /internal/v1/audit/events/` query params: `patient_id`, `actor_id`, `action`, `outcome`, `from`, `to`.
+
 All `/internal/v1/audit/*` endpoints require `Authorization: Bearer <token>`.
-All `/internal/v1/audit/*` endpoints also require `X-Request-ID` header.
-`GET /internal/v1/health` is exempt from the `X-Request-ID` requirement.
 
 ## Auth (JWT)
 

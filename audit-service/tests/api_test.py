@@ -56,13 +56,11 @@ def _auth_headers():
     )
     return {
         "Authorization": f"Bearer {token}",
-        "X-Request-ID": "test-request-id",
     }
 
 
 def _valid_event_payload():
     return {
-        "actor_type": "SERVICE",
         "source_service": "hospital-api",
         "source_node_id": "hospital-1",
         "action": "PATIENT_READ",
@@ -96,15 +94,6 @@ def test_post_event_rejects_invalid_datetime(client):
     assert response.status_code == 400
 
 
-def test_post_event_rejects_missing_request_id_header(client):
-    response = client.post(
-        "/internal/v1/audit/events/",
-        json=_valid_event_payload(),
-        headers={"Authorization": _auth_headers()["Authorization"]},
-    )
-    assert response.status_code == 400
-
-
 def test_post_event_rejects_missing_occurred_at(client):
     payload = _valid_event_payload()
     payload.pop("occurred_at")
@@ -124,7 +113,6 @@ def test_post_event_accepts_rfc3339_datetime(client):
         headers=_auth_headers(),
     )
     assert response.status_code == 201
-    assert response.headers["X-Request-ID"] == "test-request-id"
 
 
 def test_get_events_rejects_invalid_from_datetime(client):
@@ -135,15 +123,7 @@ def test_get_events_rejects_invalid_from_datetime(client):
     assert response.status_code == 400
 
 
-def test_get_events_rejects_missing_request_id_header(client):
-    response = client.get(
-        "/internal/v1/audit/events/",
-        headers={"Authorization": _auth_headers()["Authorization"]},
-    )
-    assert response.status_code == 400
-
-
-def test_health_check_does_not_require_request_id_header(client):
+def test_health_check(client):
     response = client.get("/internal/v1/health")
     assert response.status_code == 200
     body = response.get_json()

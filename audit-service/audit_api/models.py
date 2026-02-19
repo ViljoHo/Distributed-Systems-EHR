@@ -12,26 +12,18 @@ class AuditEvent(db.Model):
     occurred_at = db.Column(db.DateTime, nullable=False)
     received_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
-    request_id = db.Column(db.String(36), nullable=True)
-    actor_type = db.Column(db.String(32), nullable=False)
-    actor_id = db.Column(db.String(36), nullable=True)
-    source_service = db.Column(db.String(128), nullable=False)
-    source_node_id = db.Column(db.String(128), nullable=False)
-    action = db.Column(db.String(128), nullable=False)
-    resource_type = db.Column(db.String(128), nullable=False)
-    resource_id = db.Column(db.String(36), nullable=True)
-    patient_id = db.Column(db.String(36), nullable=True)
-    outcome = db.Column(db.String(16), nullable=False)
+    actor_id = db.Column(db.String(36), nullable=True) # user.id from auth, etc
+    source_service = db.Column(db.String(128), nullable=False)  # hospital, auth
+    source_node_id = db.Column(db.String(128), nullable=False)  # hospital_1
+    action = db.Column(db.String(128), nullable=False)  # PATIENT_READ, PATIENT_WRITE, PATIENT_UPDATE 
+    resource_type = db.Column(db.String(128), nullable=False) # PATIENT / MEDICAL_RECORD
+    resource_id = db.Column(db.String(36), nullable=True) # patient.id / record.id
+    patient_id = db.Column(db.String(36), nullable=True) # for easy searching by patient
+    outcome = db.Column(db.String(16), nullable=False) # ALLOW, DENY, ERROR
+    details = db.Column(db.JSON, nullable=False, default=dict) # changed_fields = [name, birthdate, etc]
 
-    details = db.Column(db.JSON, nullable=False, default=dict)
-
-    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
-
-    def deserialize(self, json_dict, request_id):
+    def deserialize(self, json_dict):
         self.occurred_at = _parse_iso_datetime(json_dict["occurred_at"])
-        self.request_id = request_id
-
-        self.actor_type = json_dict["actor_type"]
         self.actor_id = json_dict.get("actor_id")
         self.source_service = json_dict["source_service"]
         self.source_node_id = json_dict["source_node_id"]
@@ -48,8 +40,6 @@ class AuditEvent(db.Model):
             "event_id": self.event_id,
             "occurred_at": self.occurred_at.isoformat() if self.occurred_at else None,
             "received_at": self.received_at.isoformat() if self.received_at else None,
-            "request_id": self.request_id,
-            "actor_type": self.actor_type,
             "actor_id": self.actor_id,
             "source_service": self.source_service,
             "source_node_id": self.source_node_id,
@@ -59,7 +49,6 @@ class AuditEvent(db.Model):
             "patient_id": self.patient_id,
             "outcome": self.outcome,
             "details": self.details,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
 

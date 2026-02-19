@@ -4,7 +4,7 @@ import json
 import os
 
 import jwt
-from flask import current_app, g, request
+from flask import current_app, request
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import FormatError
 from werkzeug.exceptions import (
@@ -15,10 +15,7 @@ from werkzeug.exceptions import (
 )
 from werkzeug.routing import BaseConverter
 
-from .constants import (
-    API_BEARER_HEADER,
-    REQUEST_ID_HEADER,
-)
+from .constants import API_BEARER_HEADER
 from .models import AuditEvent
 
 SCHEMA_FOLDER_PATH = os.path.join(os.path.dirname(__file__), "static", "schema")
@@ -103,25 +100,6 @@ def _extract_scopes(payload):
 
     scopes = token_scope.split()
     return list(set(scopes))
-
-
-def register_request_hooks(app):
-    @app.before_request
-    def before_request():
-        if request.path == "/internal/v1/health":
-            return
-
-        request_id = request.headers.get(REQUEST_ID_HEADER, "").strip()
-        if not request_id:
-            raise BadRequest(description=f"Missing required header: {REQUEST_ID_HEADER}")
-        g.request_id = request_id
-
-    @app.after_request
-    def after_request(response):
-        request_id = getattr(g, "request_id", None)
-        if request_id:
-            response.headers[REQUEST_ID_HEADER] = request_id
-        return response
 
 
 class AuditEventConverter(BaseConverter):

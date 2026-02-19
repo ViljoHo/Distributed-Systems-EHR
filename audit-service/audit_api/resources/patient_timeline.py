@@ -24,7 +24,7 @@ class PatientTimeline(Resource):
             query = query.filter(AuditEvent.occurred_at <= occurred_to)
 
         rows = (
-            query.order_by(AuditEvent.occurred_at.desc(), AuditEvent.created_at.desc())
+            query.order_by(AuditEvent.occurred_at.desc(), AuditEvent.received_at.desc())
             .all()
         )
 

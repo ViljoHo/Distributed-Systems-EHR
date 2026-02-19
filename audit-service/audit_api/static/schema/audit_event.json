@@ -3,7 +3,6 @@
     "type": "object",
     "required": [
         "occurred_at",
-        "actor_type",
         "source_service",
         "source_node_id",
         "action",
@@ -17,11 +16,6 @@
             "description": "Timestamp when the audited action happened."
         },
 
-        "actor_type": {
-            "type": "string",
-            "description": "Type of actor that performed the action.",
-            "enum": ["PROVIDER", "PATIENT", "SERVICE", "SYSTEM"]
-        },
         "actor_id": {
             "type": ["string", "null"],
             "description": "Identifier of the acting subject when available."

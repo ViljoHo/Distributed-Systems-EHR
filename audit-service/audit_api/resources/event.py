@@ -1,4 +1,4 @@
-from flask import Response, g, request, url_for
+from flask import Response, request, url_for
 from flask_restful import Resource
 from jsonschema import Draft202012Validator, ValidationError, validate
 from werkzeug.exceptions import BadRequest, UnsupportedMediaType
@@ -43,7 +43,7 @@ class AuditEventCollection(Resource):
             query = query.filter(AuditEvent.occurred_at <= occurred_to)
 
         rows = (
-            query.order_by(AuditEvent.occurred_at.desc(), AuditEvent.created_at.desc())
+            query.order_by(AuditEvent.occurred_at.desc(), AuditEvent.received_at.desc())
             .all()
         )
 
@@ -61,7 +61,7 @@ class AuditEventCollection(Resource):
             raise BadRequest(description=str(error))
 
         event = AuditEvent()
-        event.deserialize(request.json, g.request_id)
+        event.deserialize(request.json)
 
         db.session.add(event)
         db.session.commit()
