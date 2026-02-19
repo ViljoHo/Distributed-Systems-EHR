@@ -39,7 +39,7 @@ def create_app(test_config=None):
 
     from . import api
     from . import models
-    from .utils import AuditEventConverter, register_request_hooks
+    from .utils import AuditEventConverter
 
     app.url_map.converters["audit_event"] = AuditEventConverter
     app.register_blueprint(api.api_bp)
