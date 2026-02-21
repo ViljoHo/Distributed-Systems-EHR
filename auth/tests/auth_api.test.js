@@ -181,6 +181,53 @@ describe('auth api', () => {
                 .expect(401)
         })
     })
+
+    describe('service-token endpoint', () => {
+        const { SERVICE_API_KEY } = require('../util/config')
+
+        test('succeeds with valid api key', async () => {
+            const response = await api
+                .post('/api/v1/auth/service-token')
+                .send({
+                    service_name: 'hospital-api',
+                    api_key: SERVICE_API_KEY
+                })
+                .expect(201)
+                .expect('Content-Type', /application\/json/)
+
+            assert.ok(response.body.token)
+            assert.strictEqual(response.body.expires_in, 900)
+        })
+
+        test('fails with invalid api key', async () => {
+            await api
+                .post('/api/v1/auth/service-token')
+                .send({
+                    service_name: 'hospital-api',
+                    api_key: 'wrong-key'
+                })
+                .expect(401)
+        })
+
+        test('fails with missing api key', async () => {
+            await api
+                .post('/api/v1/auth/service-token')
+                .send({
+                    service_name: 'hospital-api'
+                })
+                .expect(400)
+        })
+
+        test('fails with invalid service name', async () => {
+            await api
+                .post('/api/v1/auth/service-token')
+                .send({
+                    service_name: 'unknown-service',
+                    api_key: SERVICE_API_KEY
+                })
+                .expect(400)
+        })
+    })
 })
 
 after(async () => {

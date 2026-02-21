@@ -5,6 +5,7 @@ const router = require('express').Router()
 const { SECRET } = require('../util/config')
 const { User } = require('../models')
 const middleware = require('../util/middleware')
+const { logAuditEvent } = require('../util/auditClient')
 
 router.post('/register', async (request, response, next) => {
     try {
@@ -40,6 +41,15 @@ router.post('/register', async (request, response, next) => {
 
         const token = jwt.sign(tokenPayload, SECRET, { expiresIn: '30m' })
 
+        logAuditEvent({
+            actor_id: user.user_id,
+            action: 'USER_REGISTER',
+            resource_type: 'USER',
+            resource_id: user.user_id,
+            outcome: 'ALLOW',
+            details: { email: user.email }
+        })
+
         response.status(201).json({
             user_id: user.user_id,
             email: user.email,
@@ -68,12 +78,27 @@ router.post('/login', async (request, response, next) => {
         const passwordCorrect = user && await bcrypt.compare(password, user.password_hash)
 
         if (!passwordCorrect) {
+            logAuditEvent({
+                actor_id: null,
+                action: 'USER_LOGIN_FAILED',
+                resource_type: 'USER',
+                outcome: 'DENY',
+                details: { email, reason: 'invalid email or password' }
+            })
             return response.status(401).json({
                 error: 'invalid email or password'
             })
         }
 
         if (!user.is_active) {
+            logAuditEvent({
+                actor_id: user.user_id,
+                action: 'USER_LOGIN_FAILED',
+                resource_type: 'USER',
+                resource_id: user.user_id,
+                outcome: 'DENY',
+                details: { email, reason: 'account is deactivated' }
+            })
             return response.status(403).json({
                 error: 'account is deactivated'
             })
@@ -86,6 +111,15 @@ router.post('/login', async (request, response, next) => {
         }
 
         const token = jwt.sign(tokenPayload, SECRET, { expiresIn: '30m' })
+
+        logAuditEvent({
+            actor_id: user.user_id,
+            action: 'USER_LOGIN',
+            resource_type: 'USER',
+            resource_id: user.user_id,
+            outcome: 'ALLOW',
+            details: { email: user.email }
+        })
 
         response.status(200).json({
             token,
@@ -107,6 +141,14 @@ router.get('/me', middleware.tokenExtractor, async (request, response, next) => 
         if (!user) {
             return response.status(404).json({ error: 'user not found' })
         }
+
+        logAuditEvent({
+            actor_id: user.user_id,
+            action: 'USER_READ',
+            resource_type: 'USER',
+            resource_id: user.user_id,
+            outcome: 'ALLOW'
+        })
 
         response.json(user)
     } catch (error) {

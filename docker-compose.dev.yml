@@ -11,8 +11,14 @@ services:
       - DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db:5432/postgres
       - PORT=3000
       - SECRET=salaisuus
+      - SERVICE_API_KEY=shared-service-api-key
+      - AUDIT_SERVICE_URL=http://audit-service:5004
+      - AUTH_SERVICE_URL=http://auth:3001
+      - SERVICE_NAME=hospital-api
+      - SERVICE_NUMBER=${HOSPITAL_SERVICE_NUMBER}
     depends_on:
       - hospital-db
+      - audit-service
 
   auth:
     build:
@@ -25,8 +31,46 @@ services:
       - DATABASE_URL=postgres://postgres:mysecretpassword@auth-db:5432/postgres
       - PORT=3001
       - SECRET=salaisuus
+      - SERVICE_API_KEY=shared-service-api-key
+      - AUDIT_SERVICE_URL=http://audit-service:5004
+      - AUTH_SERVICE_URL=http://auth:3001
+      - SERVICE_NAME=auth-api
     depends_on:
       - auth-db
+      - audit-service
+
+  audit-service:
+    build:
+      context: ./audit-service
+    ports:
+      - 5004:5004
+    environment:
+      - PORT=5004
+      - SECRET_KEY=dev
+      - DATABASE_URL=postgresql+psycopg2://postgres:mysecretpassword@audit_db:5432/audit_service
+      - AUTH_JWT_SECRET=salaisuus
+      - AUTH_JWT_EXPECTED_ISSUER=auth-service
+      - AUTH_JWT_EXPECTED_AUDIENCE=audit-service
+    command: sh -c "flask --app=audit_api init-db && gunicorn --bind 0.0.0.0:5004 --workers 2 app:app"
+    depends_on:
+      audit_db:
+        condition: service_healthy
+
+  audit_db:
+    image: postgres
+    ports:
+      - 5435:5432
+    environment:
+      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_DB=audit_service
+    volumes:
+      - audit_data:/var/lib/postgresql
+    container_name: audit-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d audit_service"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   hospital-db:
     image: postgres
@@ -58,9 +102,12 @@ services:
     depends_on:
       - hospital
       - auth
+      - audit-service
 
 volumes:
   hospital_data:
     name: "hospital-dev-postgres-volume-v2"
   auth_data:
     name: "auth-dev-postgres-volume-v2"
+  audit_data:
+    name: "audit-service-dev-postgres-volume"

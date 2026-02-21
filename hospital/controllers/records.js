@@ -2,6 +2,7 @@ const router = require('express').Router({ mergeParams: true })
 
 const middleware = require('../util/middleware')
 const { MedicalRecord, Patient, Provider } = require('../models')
+const { logAuditEvent } = require('../util/auditClient')
 
 router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 'NURSE']), async (req, res) => {
     try {
@@ -23,6 +24,16 @@ router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 
             notes: req.body.notes,
             visit_date: req.body.visit_date
         })
+
+        logAuditEvent({
+            actor_id: req.decodedToken.user_id,
+            action: 'RECORD_CREATE',
+            resource_type: 'MEDICAL_RECORD',
+            resource_id: record.record_id,
+            patient_id: req.params.patient_id,
+            outcome: 'ALLOW'
+        })
+
         res.status(201).json(record)
     } catch (error) {
         return res.status(400).json({ error: error.message })
@@ -42,6 +53,15 @@ router.get('/', middleware.tokenExtractor, middleware.selfOrRole('patient_id', [
         limit,
         offset
     })
+
+    logAuditEvent({
+        actor_id: req.decodedToken.user_id,
+        action: 'RECORD_LIST',
+        resource_type: 'MEDICAL_RECORD',
+        patient_id: req.params.patient_id,
+        outcome: 'ALLOW'
+    })
+
     res.json(records)
 })
 
