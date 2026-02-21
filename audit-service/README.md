@@ -15,7 +15,11 @@ All `/internal/v1/audit/*` endpoints require `Authorization: Bearer <token>`.
 ## Auth (JWT)
 
 - Bearer token is verified with `AUTH_JWT_SECRET` (HS256)
-- Required JWT claims: `exp`, `iat`, `sub`, `iss`, `aud`
+- Required JWT claims: `exp`, `sub`, `iss`, `aud`
+    - `exp`: token expiration time (Unix timestamp)
+    - `sub`: token subject (who/what the token is for, e.g. service id)
+    - `iss`: token issuer (who created/signed the token)
+    - `aud`: token audience (intended target service, here audit-service)
 - Expected claim values come from:
     - `AUTH_JWT_EXPECTED_ISSUER`
     - `AUTH_JWT_EXPECTED_AUDIENCE`

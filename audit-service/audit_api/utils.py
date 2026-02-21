@@ -79,7 +79,7 @@ def _authenticate_jwt(token):
             algorithms=["HS256"],
             issuer=expected_issuer,
             audience=expected_audience,
-            options={"require": ["exp", "iat", "sub", "iss", "aud"]},
+            options={"require": ["exp", "sub", "iss", "aud"]},
         )
     except jwt.ExpiredSignatureError as exc:
         raise Unauthorized("Token expired") from exc

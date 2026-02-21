@@ -47,7 +47,6 @@ def _auth_headers():
             "sub": "hospital-api",
             "iss": TEST_JWT_ISSUER,
             "aud": TEST_JWT_AUDIENCE,
-            "iat": int(now.timestamp()),
             "exp": int((now + timedelta(minutes=10)).timestamp()),
             "scope": "audit:read audit:write",
         },
