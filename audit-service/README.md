@@ -9,6 +9,7 @@
 - `GET /internal/v1/audit/patients/<patient_id>/timeline/`
 
 `GET /internal/v1/audit/events/` query params: `patient_id`, `actor_id`, `action`, `outcome`, `from`, `to`.
+`GET /internal/v1/audit/patients/<patient_id>/timeline/` query params: `from`, `to`.
 
 All `/internal/v1/audit/*` endpoints require `Authorization: Bearer <token>`.
 
