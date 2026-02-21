@@ -31,33 +31,33 @@ def load_json_schema(file_name):
 def require_service_token(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        auth_context = _authenticate()
-        return func(*args, auth_context=auth_context, **kwargs)
+        _authenticate_service()
+        return func(*args, **kwargs)
     return wrapper
 
 
-def require_scope(required_scope):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            auth_context = kwargs.get("auth_context")
-            if not auth_context:
-                raise Forbidden("Authentication context missing")
-
-            scopes = auth_context.get("scopes", [])
-            if required_scope not in scopes:
-                raise Forbidden("Insufficient token scope")
-            return func(*args, **kwargs)
-        return wrapper
-    return decorator
+def require_admin_token(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        _authenticate_admin()
+        return func(*args, **kwargs)
+    return wrapper
 
 
-def _authenticate():
+def _authenticate_service():
     token = _token_from_bearer_header()
     if not token:
         raise Unauthorized("Missing bearer token")
 
-    return _authenticate_jwt(token)
+    _authenticate_service_jwt(token)
+
+
+def _authenticate_admin():
+    token = _token_from_bearer_header()
+    if not token:
+        raise Unauthorized("Missing bearer token")
+
+    _authenticate_admin_jwt(token)
 
 
 def _token_from_bearer_header():
@@ -67,13 +67,13 @@ def _token_from_bearer_header():
     return authorization[7:]
 
 
-def _authenticate_jwt(token):
+def _authenticate_service_jwt(token):
     jwt_secret = current_app.config.get("AUTH_JWT_SECRET")
     expected_issuer = current_app.config.get("AUTH_JWT_EXPECTED_ISSUER")
     expected_audience = current_app.config.get("AUTH_JWT_EXPECTED_AUDIENCE")
 
     try:
-        payload = jwt.decode(
+        jwt.decode(
             token,
             jwt_secret,
             algorithms=["HS256"],
@@ -90,16 +90,25 @@ def _authenticate_jwt(token):
     except jwt.PyJWTError as exc:
         raise Unauthorized("Invalid token") from exc
 
-    return {"scopes": _extract_scopes(payload)}
+def _authenticate_admin_jwt(token):
+    jwt_secret = current_app.config.get("AUTH_JWT_SECRET")
 
+    try:
+        payload = jwt.decode(
+            token,
+            jwt_secret,
+            algorithms=["HS256"],
+            options={"require": ["exp"], "verify_aud": False},
+        )
+    except jwt.ExpiredSignatureError as exc:
+        raise Unauthorized("Token expired") from exc
+    except jwt.MissingRequiredClaimError as exc:
+        raise Unauthorized(f"Invalid token: missing '{exc.claim}' claim") from exc
+    except jwt.PyJWTError as exc:
+        raise Unauthorized("Invalid token") from exc
 
-def _extract_scopes(payload):
-    token_scope = payload.get("scope")
-    if not isinstance(token_scope, str):
-        return []
-
-    scopes = token_scope.split()
-    return list(set(scopes))
+    if payload.get("role") != "ADMIN":
+        raise Forbidden("Admin role required")
 
 
 class AuditEventConverter(BaseConverter):

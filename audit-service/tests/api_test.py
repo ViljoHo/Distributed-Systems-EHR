@@ -40,7 +40,7 @@ def client():
     os.unlink(db_file_name)
 
 
-def _auth_headers():
+def _service_auth_headers():
     now = datetime.now(timezone.utc)
     token = jwt.encode(
         {
@@ -48,7 +48,6 @@ def _auth_headers():
             "iss": TEST_JWT_ISSUER,
             "aud": TEST_JWT_AUDIENCE,
             "exp": int((now + timedelta(minutes=10)).timestamp()),
-            "scope": "audit:read audit:write",
         },
         TEST_JWT_SECRET,
         algorithm="HS256",
@@ -56,6 +55,21 @@ def _auth_headers():
     return {
         "Authorization": f"Bearer {token}",
     }
+
+
+def _admin_auth_headers(role="ADMIN"):
+    now = datetime.now(timezone.utc)
+    token = jwt.encode(
+        {
+            "user_id": "admin-user-id",
+            "email": "admin@test.com",
+            "role": role,
+            "exp": int((now + timedelta(minutes=10)).timestamp()),
+        },
+        TEST_JWT_SECRET,
+        algorithm="HS256",
+    )
+    return {"Authorization": f"Bearer {token}"}
 
 
 def _valid_event_payload():
@@ -77,7 +91,7 @@ def _post_event(client, occurred_at, resource_id):
     return client.post(
         "/internal/v1/audit/events/",
         json=payload,
-        headers=_auth_headers(),
+        headers=_service_auth_headers(),
     )
 
 
@@ -88,7 +102,7 @@ def test_post_event_rejects_invalid_datetime(client):
     response = client.post(
         "/internal/v1/audit/events/",
         json=payload,
-        headers=_auth_headers(),
+        headers=_service_auth_headers(),
     )
     assert response.status_code == 400
 
@@ -100,7 +114,7 @@ def test_post_event_rejects_missing_occurred_at(client):
     response = client.post(
         "/internal/v1/audit/events/",
         json=payload,
-        headers=_auth_headers(),
+        headers=_service_auth_headers(),
     )
     assert response.status_code == 400
 
@@ -109,7 +123,7 @@ def test_post_event_accepts_rfc3339_datetime(client):
     response = client.post(
         "/internal/v1/audit/events/",
         json=_valid_event_payload(),
-        headers=_auth_headers(),
+        headers=_service_auth_headers(),
     )
     assert response.status_code == 201
 
@@ -117,7 +131,7 @@ def test_post_event_accepts_rfc3339_datetime(client):
 def test_get_events_rejects_invalid_from_datetime(client):
     response = client.get(
         "/internal/v1/audit/events/?from=not-a-date",
-        headers=_auth_headers(),
+        headers=_admin_auth_headers(),
     )
     assert response.status_code == 400
 
@@ -132,7 +146,7 @@ def test_health_check(client):
 def test_get_events_rejects_invalid_to_datetime(client):
     response = client.get(
         "/internal/v1/audit/events/?to=not-a-date",
-        headers=_auth_headers(),
+        headers=_admin_auth_headers(),
     )
     assert response.status_code == 400
 
@@ -144,10 +158,39 @@ def test_get_events_filters_by_from_and_to(client):
 
     response = client.get(
         "/internal/v1/audit/events/?from=2026-02-18T11:00:00Z&to=2026-02-18T13:00:00Z",
-        headers=_auth_headers(),
+        headers=_admin_auth_headers(),
     )
 
     assert response.status_code == 200
     items = response.get_json()
     assert len(items) == 1
     assert items[0]["resource_id"] == "middle"
+
+
+def test_get_events_allows_admin_user_token(client):
+    assert _post_event(client, "2026-02-18T12:00:00Z", "middle").status_code == 201
+
+    response = client.get(
+        "/internal/v1/audit/events/",
+        headers=_admin_auth_headers(),
+    )
+    assert response.status_code == 200
+    items = response.get_json()
+    assert len(items) == 1
+
+
+def test_post_event_rejects_admin_user_token(client):
+    response = client.post(
+        "/internal/v1/audit/events/",
+        json=_valid_event_payload(),
+        headers=_admin_auth_headers(),
+    )
+    assert response.status_code == 401
+
+
+def test_get_events_rejects_service_token(client):
+    response = client.get(
+        "/internal/v1/audit/events/",
+        headers=_service_auth_headers(),
+    )
+    assert response.status_code == 403

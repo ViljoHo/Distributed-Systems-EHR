@@ -8,7 +8,7 @@ from audit_api.models import AuditEvent
 from audit_api.utils import (
     load_json_schema,
     parse_occurred_at_or_raise,
-    require_scope,
+    require_admin_token,
     require_service_token,
 )
 
@@ -17,9 +17,8 @@ FORMAT_CHECKER = Draft202012Validator.FORMAT_CHECKER
 
 
 class AuditEventCollection(Resource):
-    @require_service_token
-    @require_scope("audit:read")
-    def get(self, auth_context):
+    @require_admin_token
+    def get(self):
         query = AuditEvent.query
 
         patient_id = request.args.get("patient_id")
@@ -50,8 +49,7 @@ class AuditEventCollection(Resource):
         return [row.serialize() for row in rows]
 
     @require_service_token
-    @require_scope("audit:write")
-    def post(self, auth_context):
+    def post(self):
         if not request.json:
             raise UnsupportedMediaType
 
@@ -75,7 +73,6 @@ class AuditEventCollection(Resource):
 
 
 class AuditEventItem(Resource):
-    @require_service_token
-    @require_scope("audit:read")
-    def get(self, audit_event: AuditEvent, auth_context):
+    @require_admin_token
+    def get(self, audit_event: AuditEvent):
         return audit_event.serialize()

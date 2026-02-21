@@ -15,18 +15,15 @@ All `/internal/v1/audit/*` endpoints require `Authorization: Bearer <token>`.
 ## Auth (JWT)
 
 - Bearer token is verified with `AUTH_JWT_SECRET` (HS256)
-- Required JWT claims: `exp`, `sub`, `iss`, `aud`
-    - `exp`: token expiration time (Unix timestamp)
-    - `sub`: token subject (who/what the token is for, e.g. service id)
+- Service token claims (used for `POST`): `exp`, `sub`, `iss`, `aud`
+    - `exp`: token expiration time
+    - `sub`: token subject (service identity, e.g. `hospital-api`)
     - `iss`: token issuer (who created/signed the token)
     - `aud`: token audience (intended target service, here audit-service)
-- Expected claim values come from:
-    - `AUTH_JWT_EXPECTED_ISSUER`
-    - `AUTH_JWT_EXPECTED_AUDIENCE`
-- Endpoint scope checks:
-    - `POST /internal/v1/audit/events/` requires scope `audit:write`
-    - `GET` audit endpoints require scope `audit:read`
-    - `scope` claim must be a space-separated string
+- Admin user token claims (used for `GET`): `exp` and `role=ADMIN`
+- Endpoint auth rules:
+    - `POST /internal/v1/audit/events/` is service-to-service only
+    - `GET` audit endpoints require admin user token with role `ADMIN`
 
 
 ## Quick start (Docker)
