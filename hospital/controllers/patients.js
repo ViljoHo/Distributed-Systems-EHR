@@ -5,7 +5,7 @@ const middleware = require('../util/middleware')
 const { Patient } = require('../models')
 const { logAuditEvent } = require('../util/auditClient')
 
-router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 'NURSE', 'ADMIN']), async (req, res) => {
+router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 'ADMIN']), async (req, res) => {
     try {
         const patient = await Patient.create({
             first_name: req.body.first_name,

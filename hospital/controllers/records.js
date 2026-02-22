@@ -4,7 +4,7 @@ const middleware = require('../util/middleware')
 const { MedicalRecord, Patient, Provider } = require('../models')
 const { logAuditEvent } = require('../util/auditClient')
 
-router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 'NURSE']), async (req, res) => {
+router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 'NURSE', 'ADMIN']), async (req, res) => {
     try {
         const patient = await Patient.findByPk(req.params.patient_id)
         if (!patient) {

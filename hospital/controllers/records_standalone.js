@@ -14,7 +14,12 @@ const recordFinder = async (req, res, next) => {
     next()
 }
 
-router.get('/:record_id', middleware.tokenExtractor, recordFinder, async (req, res) => {
+router.get(
+    '/:record_id',
+    middleware.tokenExtractor,
+    middleware.roleExtractor(['DOCTOR', 'NURSE', 'ADMIN', 'PATIENT']),
+    recordFinder,
+    async (req, res) => {
     if (!req.record) {
         return res.status(404).end()
     }
@@ -36,7 +41,7 @@ router.get('/:record_id', middleware.tokenExtractor, recordFinder, async (req, r
     res.json(req.record)
 })
 
-router.put('/:record_id', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR']), recordFinder, async (req, res) => {
+router.put('/:record_id', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 'ADMIN']), recordFinder, async (req, res) => {
     if (!req.record) {
         return res.status(404).end()
     }

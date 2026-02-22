@@ -1,11 +1,13 @@
 const { test, after, before, beforeEach, describe } = require('node:test')
 const assert = require('node:assert')
 const supertest = require('supertest')
+const jwt = require('jsonwebtoken')
 const app = require('../app')
 const api = supertest(app)
 const { Patient, Provider, MedicalRecord } = require('../models')
 const { sequelize, connectToDatabase } = require('../util/db')
 const helper = require('./test_helper')
+const { SECRET } = require('../util/config')
 
 let providerToken
 let adminToken
@@ -82,6 +84,28 @@ describe('records api', () => {
             .expect(200)
 
         assert.strictEqual(response.body.diagnosis, 'Test diagnosis')
+    })
+
+    test('get a single record fails for token without an allowed role', async () => {
+        const provider = await Provider.findOne({ where: { email: helper.initialProvider.email } })
+
+        const record = await MedicalRecord.create({
+            patient_id: testPatient.patient_id,
+            provider_id: provider.provider_id,
+            diagnosis: 'Test diagnosis',
+            visit_date: '2026-02-17'
+        })
+
+        const rolelessToken = jwt.sign(
+            { user_id: 'service-user', email: 'service@test.com' },
+            SECRET,
+            { expiresIn: '30m' }
+        )
+
+        await api
+            .get(`/api/v1/records/${record.record_id}`)
+            .set('Authorization', `Bearer ${rolelessToken}`)
+            .expect(403)
     })
 
     test('update a record (doctor only)', async () => {
