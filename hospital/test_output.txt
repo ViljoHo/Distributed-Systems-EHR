@@ -1,0 +1,290 @@
+[dotenv@17.3.1] injecting env (7) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+Sequelize configured in Standard standalone mode.
+Executing (default): SELECT 1+1 AS result
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'migrations'
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'migrations' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT "name" FROM "migrations" AS "SequelizeMeta" ORDER BY "SequelizeMeta"."name" ASC;
+Migrations up to date { files: [] }
+database connected
+Executing (default): DELETE FROM "patients"
+Executing (default): DELETE FROM "patients"
+▶ patients api
+  ✖ create a new patient (15.373554ms)
+Executing (default): DELETE FROM "patients"
+  ✖ create patient without token fails (8.740168ms)
+Executing (default): DELETE FROM "patients"
+  ✖ list patients (8.964058ms)
+Executing (default): DELETE FROM "patients"
+  ✖ get patient by id (7.53154ms)
+Executing (default): DELETE FROM "patients"
+  ✖ update patient (6.691293ms)
+  ✖ delete patient requires admin (20.164185ms)
+✖ patients api (293.747303ms)
+ℹ tests 6
+ℹ suites 1
+ℹ pass 0
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1828.864688
+
+✖ failing tests:
+
+test at tests/patients_api.test.js:29:5
+✖ create a new patient (15.373554ms)
+  Error
+      at Query.run (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/dialects/postgres/query.js:50:25)
+      at /home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/sequelize.js:315:28
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async PostgresQueryInterface.bulkDelete (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/dialects/abstract/query-interface.js:403:12)
+      at async patient.destroy (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/model.js:1838:16)
+      at async TestContext.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/tests/patients_api.test.js:19:9)
+      at async TestHook.run (node:internal/test_runner/test:1113:7)
+      at async Suite.runHook (node:internal/test_runner/test:1024:9)
+      at async Test.run (node:internal/test_runner/test:1081:9)
+      at async Promise.all (index 0) {
+    name: 'SequelizeForeignKeyConstraintError',
+    parent: error: update or delete on table "patients" violates foreign key constraint "medical_records_patient_id_fkey" on table "medical_records"
+        at parseErrorMessage (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:305:11)
+        at Parser.handlePacket (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:143:27)
+        at Parser.parse (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:37:38)
+        at Socket.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/index.js:11:42)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at TCP.onStreamRead (node:internal/stream_base_commons:189:23),
+    original: error: update or delete on table "patients" violates foreign key constraint "medical_records_patient_id_fkey" on table "medical_records"
+        at parseErrorMessage (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:305:11)
+        at Parser.handlePacket (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:143:27)
+        at Parser.parse (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:37:38)
+        at Socket.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/index.js:11:42)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at TCP.onStreamRead (node:internal/stream_base_commons:189:23),
+    sql: 'DELETE FROM "patients"',
+    parameters: {},
+    table: 'patients',
+    fields: null,
+    value: undefined,
+    index: 'medical_records_patient_id_fkey',
+    reltype: undefined
+  }
+
+test at tests/patients_api.test.js:52:5
+✖ create patient without token fails (8.740168ms)
+  Error
+      at Query.run (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/dialects/postgres/query.js:50:25)
+      at /home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/sequelize.js:315:28
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async PostgresQueryInterface.bulkDelete (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/dialects/abstract/query-interface.js:403:12)
+      at async patient.destroy (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/model.js:1838:16)
+      at async TestContext.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/tests/patients_api.test.js:19:9)
+      at async TestHook.run (node:internal/test_runner/test:1113:7)
+      at async Suite.runHook (node:internal/test_runner/test:1024:9)
+      at async Test.run (node:internal/test_runner/test:1081:9)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    name: 'SequelizeForeignKeyConstraintError',
+    parent: error: update or delete on table "patients" violates foreign key constraint "medical_records_patient_id_fkey" on table "medical_records"
+        at parseErrorMessage (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:305:11)
+        at Parser.handlePacket (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:143:27)
+        at Parser.parse (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:37:38)
+        at Socket.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/index.js:11:42)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at TCP.onStreamRead (node:internal/stream_base_commons:189:23),
+    original: error: update or delete on table "patients" violates foreign key constraint "medical_records_patient_id_fkey" on table "medical_records"
+        at parseErrorMessage (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:305:11)
+        at Parser.handlePacket (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:143:27)
+        at Parser.parse (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:37:38)
+        at Socket.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/index.js:11:42)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at TCP.onStreamRead (node:internal/stream_base_commons:189:23),
+    sql: 'DELETE FROM "patients"',
+    parameters: {},
+    table: 'patients',
+    fields: null,
+    value: undefined,
+    index: 'medical_records_patient_id_fkey',
+    reltype: undefined
+  }
+
+test at tests/patients_api.test.js:67:5
+✖ list patients (8.964058ms)
+  Error
+      at Query.run (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/dialects/postgres/query.js:50:25)
+      at /home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/sequelize.js:315:28
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async PostgresQueryInterface.bulkDelete (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/dialects/abstract/query-interface.js:403:12)
+      at async patient.destroy (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/model.js:1838:16)
+      at async TestContext.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/tests/patients_api.test.js:19:9)
+      at async TestHook.run (node:internal/test_runner/test:1113:7)
+      at async Suite.runHook (node:internal/test_runner/test:1024:9)
+      at async Test.run (node:internal/test_runner/test:1081:9)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    name: 'SequelizeForeignKeyConstraintError',
+    parent: error: update or delete on table "patients" violates foreign key constraint "medical_records_patient_id_fkey" on table "medical_records"
+        at parseErrorMessage (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:305:11)
+        at Parser.handlePacket (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:143:27)
+        at Parser.parse (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:37:38)
+        at Socket.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/index.js:11:42)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at TCP.onStreamRead (node:internal/stream_base_commons:189:23),
+    original: error: update or delete on table "patients" violates foreign key constraint "medical_records_patient_id_fkey" on table "medical_records"
+        at parseErrorMessage (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:305:11)
+        at Parser.handlePacket (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:143:27)
+        at Parser.parse (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:37:38)
+        at Socket.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/index.js:11:42)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at TCP.onStreamRead (node:internal/stream_base_commons:189:23),
+    sql: 'DELETE FROM "patients"',
+    parameters: {},
+    table: 'patients',
+    fields: null,
+    value: undefined,
+    index: 'medical_records_patient_id_fkey',
+    reltype: undefined
+  }
+
+test at tests/patients_api.test.js:79:5
+✖ get patient by id (7.53154ms)
+  Error
+      at Query.run (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/dialects/postgres/query.js:50:25)
+      at /home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/sequelize.js:315:28
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async PostgresQueryInterface.bulkDelete (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/dialects/abstract/query-interface.js:403:12)
+      at async patient.destroy (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/model.js:1838:16)
+      at async TestContext.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/tests/patients_api.test.js:19:9)
+      at async TestHook.run (node:internal/test_runner/test:1113:7)
+      at async Suite.runHook (node:internal/test_runner/test:1024:9)
+      at async Test.run (node:internal/test_runner/test:1081:9)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    name: 'SequelizeForeignKeyConstraintError',
+    parent: error: update or delete on table "patients" violates foreign key constraint "medical_records_patient_id_fkey" on table "medical_records"
+        at parseErrorMessage (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:305:11)
+        at Parser.handlePacket (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:143:27)
+        at Parser.parse (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:37:38)
+        at Socket.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/index.js:11:42)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at TCP.onStreamRead (node:internal/stream_base_commons:189:23),
+    original: error: update or delete on table "patients" violates foreign key constraint "medical_records_patient_id_fkey" on table "medical_records"
+        at parseErrorMessage (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:305:11)
+        at Parser.handlePacket (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:143:27)
+        at Parser.parse (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:37:38)
+        at Socket.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/index.js:11:42)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at TCP.onStreamRead (node:internal/stream_base_commons:189:23),
+    sql: 'DELETE FROM "patients"',
+    parameters: {},
+    table: 'patients',
+    fields: null,
+    value: undefined,
+    index: 'medical_records_patient_id_fkey',
+    reltype: undefined
+  }
+
+test at tests/patients_api.test.js:90:5
+✖ update patient (6.691293ms)
+  Error
+      at Query.run (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/dialects/postgres/query.js:50:25)
+      at /home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/sequelize.js:315:28
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async PostgresQueryInterface.bulkDelete (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/dialects/abstract/query-interface.js:403:12)
+      at async patient.destroy (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/model.js:1838:16)
+      at async TestContext.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/tests/patients_api.test.js:19:9)
+      at async TestHook.run (node:internal/test_runner/test:1113:7)
+      at async Suite.runHook (node:internal/test_runner/test:1024:9)
+      at async Test.run (node:internal/test_runner/test:1081:9)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    name: 'SequelizeForeignKeyConstraintError',
+    parent: error: update or delete on table "patients" violates foreign key constraint "medical_records_patient_id_fkey" on table "medical_records"
+        at parseErrorMessage (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:305:11)
+        at Parser.handlePacket (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:143:27)
+        at Parser.parse (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:37:38)
+        at Socket.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/index.js:11:42)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at TCP.onStreamRead (node:internal/stream_base_commons:189:23),
+    original: error: update or delete on table "patients" violates foreign key constraint "medical_records_patient_id_fkey" on table "medical_records"
+        at parseErrorMessage (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:305:11)
+        at Parser.handlePacket (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:143:27)
+        at Parser.parse (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:37:38)
+        at Socket.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/index.js:11:42)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at TCP.onStreamRead (node:internal/stream_base_commons:189:23),
+    sql: 'DELETE FROM "patients"',
+    parameters: {},
+    table: 'patients',
+    fields: null,
+    value: undefined,
+    index: 'medical_records_patient_id_fkey',
+    reltype: undefined
+  }
+
+test at tests/patients_api.test.js:102:5
+✖ delete patient requires admin (20.164185ms)
+  Error
+      at Query.run (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/dialects/postgres/query.js:50:25)
+      at /home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/sequelize.js:315:28
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async PostgresQueryInterface.bulkDelete (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/dialects/abstract/query-interface.js:403:12)
+      at async patient.destroy (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/sequelize/lib/model.js:1838:16)
+      at async TestContext.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/tests/patients_api.test.js:19:9)
+      at async TestHook.run (node:internal/test_runner/test:1113:7)
+      at async Suite.runHook (node:internal/test_runner/test:1024:9)
+      at async Test.run (node:internal/test_runner/test:1081:9)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    name: 'SequelizeForeignKeyConstraintError',
+    parent: error: update or delete on table "patients" violates foreign key constraint "medical_records_patient_id_fkey" on table "medical_records"
+        at parseErrorMessage (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:305:11)
+        at Parser.handlePacket (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:143:27)
+        at Parser.parse (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:37:38)
+        at Socket.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/index.js:11:42)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at TCP.onStreamRead (node:internal/stream_base_commons:189:23),
+    original: error: update or delete on table "patients" violates foreign key constraint "medical_records_patient_id_fkey" on table "medical_records"
+        at parseErrorMessage (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:305:11)
+        at Parser.handlePacket (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:143:27)
+        at Parser.parse (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/parser.js:37:38)
+        at Socket.<anonymous> (/home/vilijo/Documents/koulu/DistributedSystems/Distributed-Systems-EHR/hospital/node_modules/pg-protocol/dist/index.js:11:42)
+        at Socket.emit (node:events:508:28)
+        at addChunk (node:internal/streams/readable:559:12)
+        at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+        at Readable.push (node:internal/streams/readable:390:5)
+        at TCP.onStreamRead (node:internal/stream_base_commons:189:23),
+    sql: 'DELETE FROM "patients"',
+    parameters: {},
+    table: 'patients',
+    fields: null,
+    value: undefined,
+    index: 'medical_records_patient_id_fkey',
+    reltype: undefined
+  }

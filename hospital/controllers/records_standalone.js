@@ -7,7 +7,7 @@ const { logAuditEvent } = require('../util/auditClient')
 const recordFinder = async (req, res, next) => {
     req.record = await MedicalRecord.findByPk(req.params.record_id, {
         include: [
-            { model: Patient, attributes: ['patient_id', 'first_name', 'last_name', 'user_id'] },
+            { model: Patient, attributes: ['patient_id', 'first_name', 'last_name', 'ssn'] },
             { model: Provider, attributes: ['provider_id', 'name', 'role'] }
         ]
     })
@@ -20,7 +20,7 @@ router.get('/:record_id', middleware.tokenExtractor, recordFinder, async (req, r
     }
 
     const token = req.decodedToken
-    if (token.role === 'PATIENT' && (!req.record.patient || req.record.patient.user_id !== token.user_id)) {
+    if (token.role === 'PATIENT' && (!req.record.patient || req.record.patient.ssn !== token.ssn)) {
         return res.status(403).json({ error: 'access denied' })
     }
 

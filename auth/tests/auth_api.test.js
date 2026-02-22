@@ -24,7 +24,8 @@ describe('auth api', () => {
             const newUser = {
                 email: 'new@user.com',
                 password: 'secretpassword',
-                role: 'PATIENT'
+                role: 'PATIENT',
+                ssn: '111111-1111'
             }
 
             const response = await api
@@ -76,13 +77,13 @@ describe('auth api', () => {
             // Create first user
             await api
                 .post('/api/v1/auth/register')
-                .send(newUser)
+                .send({ ...newUser, ssn: '222222-2222' })
                 .expect(201)
 
             // Try to create same user again
             await api
                 .post('/api/v1/auth/register')
-                .send(newUser)
+                .send({ ...newUser, ssn: '222222-2222' })
                 .expect(400)
         })
     })
@@ -95,7 +96,8 @@ describe('auth api', () => {
             await User.create({
                 email: helper.initialUser.email,
                 password_hash: passwordHash,
-                role: helper.initialUser.role
+                role: helper.initialUser.role,
+                ssn: '333333-3333'
             })
         })
 
@@ -144,7 +146,8 @@ describe('auth api', () => {
             const user = await User.create({
                 email: helper.initialUser.email,
                 password_hash: passwordHash,
-                role: helper.initialUser.role
+                role: helper.initialUser.role,
+                ssn: '333333-3333'
             })
 
             // Login to get token

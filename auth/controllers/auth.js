@@ -9,11 +9,11 @@ const { logAuditEvent } = require('../util/auditClient')
 
 router.post('/register', async (request, response, next) => {
     try {
-        const { email, password, role } = request.body
+        const { email, password, role, ssn } = request.body
 
-        if (!email || !password || !role) {
+        if (!email || !password || !role || !ssn) {
             return response.status(400).json({
-                error: 'email, password, and role are required'
+                error: 'email, password, role, and ssn are required'
             })
         }
 
@@ -30,13 +30,15 @@ router.post('/register', async (request, response, next) => {
         const user = await User.create({
             email,
             password_hash: passwordHash,
-            role
+            role,
+            ssn
         })
 
         const tokenPayload = {
             user_id: user.user_id,
             email: user.email,
-            role: user.role
+            role: user.role,
+            ssn: user.ssn
         }
 
         const token = jwt.sign(tokenPayload, SECRET, { expiresIn: '30m' })
@@ -107,7 +109,8 @@ router.post('/login', async (request, response, next) => {
         const tokenPayload = {
             user_id: user.user_id,
             email: user.email,
-            role: user.role
+            role: user.role,
+            ssn: user.ssn
         }
 
         const token = jwt.sign(tokenPayload, SECRET, { expiresIn: '30m' })

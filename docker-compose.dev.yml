@@ -1,6 +1,6 @@
 services:
 
-  hospital:
+  hospital_1:
     build:
       context: ./hospital
       dockerfile: dev.Dockerfile
@@ -8,16 +8,61 @@ services:
       - ./hospital/:/usr/src/app
       - /usr/src/app/node_modules
     environment:
-      - DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db:5432/postgres
+      - DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db-primary:5432/postgres
+      - READ_DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db-primary:5432/postgres
       - PORT=3000
       - SECRET=salaisuus
       - SERVICE_API_KEY=shared-service-api-key
       - AUDIT_SERVICE_URL=http://audit-service:5004
       - AUTH_SERVICE_URL=http://auth:3001
       - SERVICE_NAME=hospital-api
-      - SERVICE_NUMBER=${HOSPITAL_SERVICE_NUMBER}
+      - SERVICE_NUMBER=1
     depends_on:
-      - hospital-db
+      - hospital-db-primary
+      - audit-service
+
+  hospital_2:
+    build:
+      context: ./hospital
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ./hospital/:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db-primary:5432/postgres
+      - READ_DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db-replica-1:5432/postgres
+      - PORT=3000
+      - SECRET=salaisuus
+      - SERVICE_API_KEY=shared-service-api-key
+      - AUDIT_SERVICE_URL=http://audit-service:5004
+      - AUTH_SERVICE_URL=http://auth:3001
+      - SERVICE_NAME=hospital-api
+      - SERVICE_NUMBER=2
+    depends_on:
+      - hospital-db-primary
+      - hospital-db-replica-1
+      - audit-service
+
+  hospital_3:
+    build:
+      context: ./hospital
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ./hospital/:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db-primary:5432/postgres
+      - READ_DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db-replica-2:5432/postgres
+      - PORT=3000
+      - SECRET=salaisuus
+      - SERVICE_API_KEY=shared-service-api-key
+      - AUDIT_SERVICE_URL=http://audit-service:5004
+      - AUTH_SERVICE_URL=http://auth:3001
+      - SERVICE_NAME=hospital-api
+      - SERVICE_NUMBER=3
+    depends_on:
+      - hospital-db-primary
+      - hospital-db-replica-2
       - audit-service
 
   auth:
@@ -67,20 +112,61 @@ services:
       - audit_data:/var/lib/postgresql
     container_name: audit-db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d audit_service"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d audit_service" ]
       interval: 5s
       timeout: 5s
       retries: 12
 
-  hospital-db:
-    image: postgres
+  hospital-db-primary:
+    image: bitnami/postgresql:latest
     ports:
       - 5432:5432
     environment:
-      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=mysecretpassword
+      - POSTGRESQL_DATABASE=postgres
     volumes:
-      - hospital_data:/var/lib/postgresql
-    container_name: hospital-db
+      - hospital_primary_data:/bitnami/postgresql
+    container_name: hospital-db-primary
+
+  hospital-db-replica-1:
+    image: bitnami/postgresql:latest
+    ports:
+      - 5434:5432
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_MASTER_HOST=hospital-db-primary
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=mysecretpassword
+    volumes:
+      - hospital_replica_1_data:/bitnami/postgresql
+    container_name: hospital-db-replica-1
+    depends_on:
+      - hospital-db-primary
+
+  hospital-db-replica-2:
+    image: bitnami/postgresql:latest
+    ports:
+      - 5436:5432
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_MASTER_HOST=hospital-db-primary
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=mysecretpassword
+    volumes:
+      - hospital_replica_2_data:/bitnami/postgresql
+    container_name: hospital-db-replica-2
+    depends_on:
+      - hospital-db-primary
 
   auth-db:
     image: postgres
@@ -100,13 +186,19 @@ services:
       - 8080:80
     container_name: reverse-proxy
     depends_on:
-      - hospital
+      - hospital_1
+      - hospital_2
+      - hospital_3
       - auth
       - audit-service
 
 volumes:
-  hospital_data:
-    name: "hospital-dev-postgres-volume-v2"
+  hospital_primary_data:
+    name: "hospital-primary-data"
+  hospital_replica_1_data:
+    name: "hospital-replica-1-data"
+  hospital_replica_2_data:
+    name: "hospital-replica-2-data"
   auth_data:
     name: "auth-dev-postgres-volume-v2"
   audit_data:

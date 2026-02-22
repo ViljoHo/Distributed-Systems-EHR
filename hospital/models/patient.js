@@ -35,9 +35,9 @@ Patient.init({
         allowNull: false,
         unique: true
     },
-    user_id: {
-        type: DataTypes.UUID,
-        allowNull: true,
+    ssn: {
+        type: DataTypes.STRING,
+        allowNull: false,
         unique: true
     },
     blood_type: {

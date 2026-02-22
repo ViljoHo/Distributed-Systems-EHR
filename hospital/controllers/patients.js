@@ -14,6 +14,7 @@ router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 
             gender: req.body.gender,
             phone: req.body.phone,
             email: req.body.email,
+            ssn: req.body.ssn,
             blood_type: req.body.blood_type
         })
 

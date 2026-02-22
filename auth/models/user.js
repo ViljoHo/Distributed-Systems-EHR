@@ -26,6 +26,11 @@ User.init({
         type: DataTypes.ENUM('PATIENT', 'DOCTOR', 'NURSE', 'ADMIN'),
         allowNull: false
     },
+    ssn: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true
+    },
     is_active: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

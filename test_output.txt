@@ -1,0 +1,171 @@
+
+> hospital@1.0.0 test
+> cross-env NODE_ENV=test node --test --test-concurrency=1
+
+TAP version 13
+# [dotenv@17.3.1] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+# Sequelize configured in Standard standalone mode.
+# Executing (default): DELETE FROM "patients"
+# Executing (default): DELETE FROM "providers"
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "patients" ("patient_id","first_name","last_name","date_of_birth","gender","phone","email","blood_type","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "patient_id","first_name","last_name","date_of_birth","gender","phone","email","user_id","blood_type","created_at","updated_at";
+# Executing (default): DELETE FROM "patients"
+# Subtest: patients api
+    # Subtest: create a new patient
+    ok 1 - create a new patient
+      ---
+      duration_ms: 120.28199
+      ...
+# Executing (default): DELETE FROM "providers"
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): DELETE FROM "patients"
+    # Subtest: create patient without token fails
+    ok 2 - create patient without token fails
+      ---
+      duration_ms: 46.236525
+      ...
+# Executing (default): DELETE FROM "providers"
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "patients" ("patient_id","first_name","last_name","date_of_birth","gender","phone","email","blood_type","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "patient_id","first_name","last_name","date_of_birth","gender","phone","email","user_id","blood_type","created_at","updated_at";
+# Executing (default): SELECT "patient_id", "first_name", "last_name", "date_of_birth", "gender", "phone", "email", "user_id", "blood_type", "created_at" AS "createdAt", "updated_at" AS "updatedAt" FROM "patients" AS "patient" LIMIT 20 OFFSET 0;
+# Executing (default): DELETE FROM "patients"
+    # Subtest: list patients
+    ok 3 - list patients
+      ---
+      duration_ms: 49.168571
+      ...
+# Executing (default): DELETE FROM "providers"
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "patients" ("patient_id","first_name","last_name","date_of_birth","gender","phone","email","blood_type","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "patient_id","first_name","last_name","date_of_birth","gender","phone","email","user_id","blood_type","created_at","updated_at";
+# Executing (default): SELECT "patient_id", "first_name", "last_name", "date_of_birth", "gender", "phone", "email", "user_id", "blood_type", "created_at" AS "createdAt", "updated_at" AS "updatedAt" FROM "patients" AS "patient" WHERE "patient"."patient_id" = '4ea96b95-d2d2-4c3d-b120-eddbdba930db';
+# Executing (default): DELETE FROM "patients"
+    # Subtest: get patient by id
+    ok 4 - get patient by id
+      ---
+      duration_ms: 53.430254
+      ...
+# Executing (default): DELETE FROM "providers"
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "patients" ("patient_id","first_name","last_name","date_of_birth","gender","phone","email","blood_type","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "patient_id","first_name","last_name","date_of_birth","gender","phone","email","user_id","blood_type","created_at","updated_at";
+# Executing (default): SELECT "patient_id", "first_name", "last_name", "date_of_birth", "gender", "phone", "email", "user_id", "blood_type", "created_at" AS "createdAt", "updated_at" AS "updatedAt" FROM "patients" AS "patient" WHERE "patient"."patient_id" = '8a3b53fb-1387-423c-ba07-7b6be5ef0173';
+# Executing (default): UPDATE "patients" SET "first_name"=$1,"updated_at"=$2 WHERE "patient_id" = $3
+# Executing (default): DELETE FROM "patients"
+    # Subtest: update patient
+    ok 5 - update patient
+      ---
+      duration_ms: 59.269497
+      ...
+# Executing (default): DELETE FROM "providers"
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "patients" ("patient_id","first_name","last_name","date_of_birth","gender","phone","email","blood_type","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "patient_id","first_name","last_name","date_of_birth","gender","phone","email","user_id","blood_type","created_at","updated_at";
+# Executing (default): SELECT "patient_id", "first_name", "last_name", "date_of_birth", "gender", "phone", "email", "user_id", "blood_type", "created_at" AS "createdAt", "updated_at" AS "updatedAt" FROM "patients" AS "patient" WHERE "patient"."patient_id" = '7428cf64-372f-4b60-aaee-0b8f8005b23b';
+# Executing (default): DELETE FROM "patients" WHERE "patient_id" = '7428cf64-372f-4b60-aaee-0b8f8005b23b'
+# Executing (default): SELECT "patient_id", "first_name", "last_name", "date_of_birth", "gender", "phone", "email", "user_id", "blood_type", "created_at" AS "createdAt", "updated_at" AS "updatedAt" FROM "patients" AS "patient";
+    # Subtest: delete patient requires admin
+    ok 6 - delete patient requires admin
+      ---
+      duration_ms: 63.749059
+      ...
+    1..6
+ok 1 - patients api
+  ---
+  duration_ms: 393.959971
+  type: 'suite'
+  ...
+# [dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+# Sequelize configured in Standard standalone mode.
+# Executing (default): DELETE FROM "medical_records"
+# Executing (default): DELETE FROM "patients"
+# Executing (default): DELETE FROM "providers"
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "patients" ("patient_id","first_name","last_name","date_of_birth","gender","phone","email","blood_type","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "patient_id","first_name","last_name","date_of_birth","gender","phone","email","user_id","blood_type","created_at","updated_at";
+# Executing (default): SELECT "patient_id", "first_name", "last_name", "date_of_birth", "gender", "phone", "email", "user_id", "blood_type", "created_at" AS "createdAt", "updated_at" AS "updatedAt" FROM "patients" AS "patient" WHERE "patient"."patient_id" = '84db6794-bbae-4a4b-9c1a-1b54b7e536c6';
+# Executing (default): SELECT "provider_id", "name", "role", "email", "created_at" AS "createdAt", "updated_at" AS "updatedAt" FROM "providers" AS "provider" WHERE "provider"."email" = 'doctor@test.com';
+# Executing (default): INSERT INTO "medical_records" ("record_id","patient_id","provider_id","diagnosis","treatment","notes","visit_date","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "record_id","patient_id","provider_id","diagnosis","treatment","notes","visit_date","created_at","updated_at";
+# Executing (default): DELETE FROM "medical_records"
+# Subtest: records api
+    # Subtest: create a medical record
+    ok 1 - create a medical record
+      ---
+      duration_ms: 145.196074
+      ...
+# Executing (default): DELETE FROM "patients"
+# Executing (default): DELETE FROM "providers"
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "patients" ("patient_id","first_name","last_name","date_of_birth","gender","phone","email","blood_type","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "patient_id","first_name","last_name","date_of_birth","gender","phone","email","user_id","blood_type","created_at","updated_at";
+# Executing (default): SELECT "provider_id", "name", "role", "email", "created_at" AS "createdAt", "updated_at" AS "updatedAt" FROM "providers" AS "provider" WHERE "provider"."email" = 'doctor@test.com';
+# Executing (default): INSERT INTO "medical_records" ("record_id","patient_id","provider_id","diagnosis","visit_date","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "record_id","patient_id","provider_id","diagnosis","treatment","notes","visit_date","created_at","updated_at";
+# Executing (default): SELECT "medical_record"."record_id", "medical_record"."patient_id", "medical_record"."provider_id", "medical_record"."diagnosis", "medical_record"."treatment", "medical_record"."notes", "medical_record"."visit_date", "medical_record"."created_at" AS "createdAt", "medical_record"."updated_at" AS "updatedAt", "provider"."provider_id" AS "provider.provider_id", "provider"."name" AS "provider.name", "provider"."role" AS "provider.role" FROM "medical_records" AS "medical_record" LEFT OUTER JOIN "providers" AS "provider" ON "medical_record"."provider_id" = "provider"."provider_id" WHERE "medical_record"."patient_id" = 'df60b7d2-53af-4d69-856c-ea50478c3f7c' LIMIT 20 OFFSET 0;
+# Executing (default): DELETE FROM "medical_records"
+    # Subtest: list records for a patient
+    ok 2 - list records for a patient
+      ---
+      duration_ms: 75.014157
+      ...
+# Executing (default): DELETE FROM "patients"
+# Executing (default): DELETE FROM "providers"
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "patients" ("patient_id","first_name","last_name","date_of_birth","gender","phone","email","blood_type","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "patient_id","first_name","last_name","date_of_birth","gender","phone","email","user_id","blood_type","created_at","updated_at";
+# Executing (default): SELECT "provider_id", "name", "role", "email", "created_at" AS "createdAt", "updated_at" AS "updatedAt" FROM "providers" AS "provider" WHERE "provider"."email" = 'doctor@test.com';
+# Executing (default): INSERT INTO "medical_records" ("record_id","patient_id","provider_id","diagnosis","visit_date","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "record_id","patient_id","provider_id","diagnosis","treatment","notes","visit_date","created_at","updated_at";
+# Executing (default): SELECT "medical_record"."record_id", "medical_record"."patient_id", "medical_record"."provider_id", "medical_record"."diagnosis", "medical_record"."treatment", "medical_record"."notes", "medical_record"."visit_date", "medical_record"."created_at" AS "createdAt", "medical_record"."updated_at" AS "updatedAt", "patient"."patient_id" AS "patient.patient_id", "patient"."first_name" AS "patient.first_name", "patient"."last_name" AS "patient.last_name", "patient"."user_id" AS "patient.user_id", "provider"."provider_id" AS "provider.provider_id", "provider"."name" AS "provider.name", "provider"."role" AS "provider.role" FROM "medical_records" AS "medical_record" LEFT OUTER JOIN "patients" AS "patient" ON "medical_record"."patient_id" = "patient"."patient_id" LEFT OUTER JOIN "providers" AS "provider" ON "medical_record"."provider_id" = "provider"."provider_id" WHERE "medical_record"."record_id" = '3dd76959-2ce8-4845-be6c-838cbae12a4a';
+# Executing (default): DELETE FROM "medical_records"
+    # Subtest: get a single record
+    ok 3 - get a single record
+      ---
+      duration_ms: 71.445298
+      ...
+# Executing (default): DELETE FROM "patients"
+# Executing (default): DELETE FROM "providers"
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "patients" ("patient_id","first_name","last_name","date_of_birth","gender","phone","email","blood_type","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "patient_id","first_name","last_name","date_of_birth","gender","phone","email","user_id","blood_type","created_at","updated_at";
+# Executing (default): SELECT "provider_id", "name", "role", "email", "created_at" AS "createdAt", "updated_at" AS "updatedAt" FROM "providers" AS "provider" WHERE "provider"."email" = 'doctor@test.com';
+# Executing (default): INSERT INTO "medical_records" ("record_id","patient_id","provider_id","diagnosis","visit_date","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "record_id","patient_id","provider_id","diagnosis","treatment","notes","visit_date","created_at","updated_at";
+# Executing (default): SELECT "medical_record"."record_id", "medical_record"."patient_id", "medical_record"."provider_id", "medical_record"."diagnosis", "medical_record"."treatment", "medical_record"."notes", "medical_record"."visit_date", "medical_record"."created_at" AS "createdAt", "medical_record"."updated_at" AS "updatedAt", "patient"."patient_id" AS "patient.patient_id", "patient"."first_name" AS "patient.first_name", "patient"."last_name" AS "patient.last_name", "patient"."user_id" AS "patient.user_id", "provider"."provider_id" AS "provider.provider_id", "provider"."name" AS "provider.name", "provider"."role" AS "provider.role" FROM "medical_records" AS "medical_record" LEFT OUTER JOIN "patients" AS "patient" ON "medical_record"."patient_id" = "patient"."patient_id" LEFT OUTER JOIN "providers" AS "provider" ON "medical_record"."provider_id" = "provider"."provider_id" WHERE "medical_record"."record_id" = '62660df7-12cd-40e2-ad53-215df8398984';
+# Executing (default): UPDATE "medical_records" SET "diagnosis"=$1,"updated_at"=$2 WHERE "record_id" = $3
+# Executing (default): DELETE FROM "medical_records"
+    # Subtest: update a record (doctor only)
+    ok 4 - update a record (doctor only)
+      ---
+      duration_ms: 76.965775
+      ...
+# Executing (default): DELETE FROM "patients"
+# Executing (default): DELETE FROM "providers"
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "providers" ("provider_id","name","role","email","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "provider_id","name","role","email","created_at","updated_at";
+# Executing (default): INSERT INTO "patients" ("patient_id","first_name","last_name","date_of_birth","gender","phone","email","blood_type","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "patient_id","first_name","last_name","date_of_birth","gender","phone","email","user_id","blood_type","created_at","updated_at";
+# Executing (default): SELECT "provider_id", "name", "role", "email", "created_at" AS "createdAt", "updated_at" AS "updatedAt" FROM "providers" AS "provider" WHERE "provider"."email" = 'doctor@test.com';
+# Executing (default): INSERT INTO "medical_records" ("record_id","patient_id","provider_id","diagnosis","visit_date","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "record_id","patient_id","provider_id","diagnosis","treatment","notes","visit_date","created_at","updated_at";
+# Executing (default): SELECT "medical_record"."record_id", "medical_record"."patient_id", "medical_record"."provider_id", "medical_record"."diagnosis", "medical_record"."treatment", "medical_record"."notes", "medical_record"."visit_date", "medical_record"."created_at" AS "createdAt", "medical_record"."updated_at" AS "updatedAt", "patient"."patient_id" AS "patient.patient_id", "patient"."first_name" AS "patient.first_name", "patient"."last_name" AS "patient.last_name", "patient"."user_id" AS "patient.user_id", "provider"."provider_id" AS "provider.provider_id", "provider"."name" AS "provider.name", "provider"."role" AS "provider.role" FROM "medical_records" AS "medical_record" LEFT OUTER JOIN "patients" AS "patient" ON "medical_record"."patient_id" = "patient"."patient_id" LEFT OUTER JOIN "providers" AS "provider" ON "medical_record"."provider_id" = "provider"."provider_id" WHERE "medical_record"."record_id" = '752523bc-3a68-4ec8-ba9a-a9ddd73b0b0e';
+# Executing (default): DELETE FROM "medical_records" WHERE "record_id" = '752523bc-3a68-4ec8-ba9a-a9ddd73b0b0e'
+# Executing (default): SELECT "record_id", "patient_id", "provider_id", "diagnosis", "treatment", "notes", "visit_date", "created_at" AS "createdAt", "updated_at" AS "updatedAt" FROM "medical_records" AS "medical_record";
+    # Subtest: delete record requires admin
+    ok 5 - delete record requires admin
+      ---
+      duration_ms: 83.733646
+      ...
+    1..5
+ok 2 - records api
+  ---
+  duration_ms: 454.166772
+  type: 'suite'
+  ...
+1..2
+# tests 11
+# suites 2
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1802.629607

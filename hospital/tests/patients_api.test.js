@@ -1,17 +1,22 @@
-const { test, after, beforeEach, describe } = require('node:test')
+const { test, after, before, beforeEach, describe } = require('node:test')
 const assert = require('node:assert')
 const supertest = require('supertest')
 const app = require('../app')
 const api = supertest(app)
-const { Patient, Provider } = require('../models')
-const { sequelize } = require('../util/db')
+const { Patient, Provider, MedicalRecord } = require('../models')
+const { sequelize, connectToDatabase } = require('../util/db')
 const helper = require('./test_helper')
 
 let providerToken
 let adminToken
 
 describe('patients api', () => {
+    before(async () => {
+        await connectToDatabase()
+    })
+
     beforeEach(async () => {
+        await MedicalRecord.destroy({ where: {} })
         await Patient.destroy({ where: {} })
         await Provider.destroy({ where: {} })
 
@@ -30,6 +35,7 @@ describe('patients api', () => {
             gender: 'FEMALE',
             phone: '0501234567',
             email: 'jane@test.com',
+            ssn: '150585-789X',
             blood_type: 'O+'
         }
 

@@ -21,6 +21,7 @@ const initialPatient = {
     gender: 'MALE',
     phone: '1234567890',
     email: 'patient@test.com',
+    ssn: '123456-7890',
     blood_type: 'A+'
 }
 
@@ -28,16 +29,18 @@ const getProviderToken = (provider) => {
     const tokenPayload = {
         user_id: 'test-user-id',
         email: provider.email,
-        role: provider.role
+        role: provider.role,
+        ssn: 'test-provider-ssn'
     }
     return `Bearer ${jwt.sign(tokenPayload, SECRET, { expiresIn: '30m' })}`
 }
 
 const getPatientToken = (patient) => {
     const tokenPayload = {
-        user_id: patient.user_id || 'test-patient-user-id',
+        user_id: 'test-patient-user-id',
         email: patient.email,
-        role: 'PATIENT'
+        role: 'PATIENT',
+        ssn: patient.ssn || 'test-patient-ssn'
     }
     return `Bearer ${jwt.sign(tokenPayload, SECRET, { expiresIn: '30m' })}`
 }

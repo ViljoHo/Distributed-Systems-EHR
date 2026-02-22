@@ -1,10 +1,10 @@
-const { test, after, beforeEach, describe } = require('node:test')
+const { test, after, before, beforeEach, describe } = require('node:test')
 const assert = require('node:assert')
 const supertest = require('supertest')
 const app = require('../app')
 const api = supertest(app)
 const { Patient, Provider, MedicalRecord } = require('../models')
-const { sequelize } = require('../util/db')
+const { sequelize, connectToDatabase } = require('../util/db')
 const helper = require('./test_helper')
 
 let providerToken
@@ -12,6 +12,10 @@ let adminToken
 let testPatient
 
 describe('records api', () => {
+    before(async () => {
+        await connectToDatabase()
+    })
+
     beforeEach(async () => {
         await MedicalRecord.destroy({ where: {} })
         await Patient.destroy({ where: {} })

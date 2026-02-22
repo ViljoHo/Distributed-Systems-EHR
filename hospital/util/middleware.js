@@ -5,7 +5,8 @@ const { Patient } = require('../models')
 const devToken = {
   user_id: 'dev-user-id',
   email: 'dev@test.com',
-  role: 'ADMIN'
+  role: 'ADMIN',
+  ssn: 'dev-ssn'
 }
 
 const tokenExtractor = (req, res, next) => {
@@ -45,7 +46,7 @@ const selfOrRole = (paramName, allowedRoles) => {
     }
     if (token.role === 'PATIENT') {
       const patient = await Patient.findByPk(req.params[paramName])
-      if (patient && patient.user_id === token.user_id) {
+      if (patient && patient.ssn === token.ssn) {
         return next()
       }
     }
