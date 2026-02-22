@@ -4,7 +4,7 @@ const supertest = require('supertest')
 const jwt = require('jsonwebtoken')
 const app = require('../app')
 const api = supertest(app)
-const { Patient, Provider, MedicalRecord } = require('../models')
+const { Patient, MedicalRecord } = require('../models')
 const { sequelize, connectToDatabase } = require('../util/db')
 const helper = require('./test_helper')
 const { SECRET } = require('../util/config')
@@ -21,14 +21,11 @@ describe('records api', () => {
     beforeEach(async () => {
         await MedicalRecord.destroy({ where: {} })
         await Patient.destroy({ where: {} })
-        await Provider.destroy({ where: {} })
 
-        const provider = await Provider.create(helper.initialProvider)
-        const admin = await Provider.create(helper.initialAdmin)
         testPatient = await Patient.create(helper.initialPatient)
 
-        providerToken = helper.getProviderToken(provider)
-        adminToken = helper.getProviderToken(admin)
+        providerToken = helper.getProviderToken('DOCTOR')
+        adminToken = helper.getProviderToken('ADMIN')
     })
 
     test('create a medical record', async () => {
@@ -51,11 +48,9 @@ describe('records api', () => {
     })
 
     test('list records for a patient', async () => {
-        const provider = await Provider.findOne({ where: { email: helper.initialProvider.email } })
-
         await MedicalRecord.create({
             patient_id: testPatient.patient_id,
-            provider_id: provider.provider_id,
+            provider_id: helper.TEST_PROVIDER_ID,
             diagnosis: 'Test diagnosis',
             visit_date: '2026-02-17'
         })
@@ -69,11 +64,9 @@ describe('records api', () => {
     })
 
     test('get a single record', async () => {
-        const provider = await Provider.findOne({ where: { email: helper.initialProvider.email } })
-
         const record = await MedicalRecord.create({
             patient_id: testPatient.patient_id,
-            provider_id: provider.provider_id,
+            provider_id: helper.TEST_PROVIDER_ID,
             diagnosis: 'Test diagnosis',
             visit_date: '2026-02-17'
         })
@@ -109,11 +102,9 @@ describe('records api', () => {
     })
 
     test('update a record (doctor only)', async () => {
-        const provider = await Provider.findOne({ where: { email: helper.initialProvider.email } })
-
         const record = await MedicalRecord.create({
             patient_id: testPatient.patient_id,
-            provider_id: provider.provider_id,
+            provider_id: helper.TEST_PROVIDER_ID,
             diagnosis: 'Old diagnosis',
             visit_date: '2026-02-17'
         })
@@ -128,11 +119,9 @@ describe('records api', () => {
     })
 
     test('delete record requires admin', async () => {
-        const provider = await Provider.findOne({ where: { email: helper.initialProvider.email } })
-
         const record = await MedicalRecord.create({
             patient_id: testPatient.patient_id,
-            provider_id: provider.provider_id,
+            provider_id: helper.TEST_PROVIDER_ID,
             diagnosis: 'To delete',
             visit_date: '2026-02-17'
         })

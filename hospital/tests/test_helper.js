@@ -1,18 +1,9 @@
 const jwt = require('jsonwebtoken')
-const { Patient, Provider, MedicalRecord } = require('../models')
+const { Patient, MedicalRecord } = require('../models')
 const { SECRET } = require('../util/config')
 
-const initialProvider = {
-    name: 'Dr. Test',
-    role: 'DOCTOR',
-    email: 'doctor@test.com'
-}
-
-const initialAdmin = {
-    name: 'Admin User',
-    role: 'ADMIN',
-    email: 'admin@test.com'
-}
+const TEST_PROVIDER_ID = '99999999-9999-4999-9999-999999999999'
+const TEST_ADMIN_ID = '88888888-8888-4888-8888-888888888888'
 
 const initialPatient = {
     first_name: 'Test',
@@ -25,12 +16,12 @@ const initialPatient = {
     blood_type: 'A+'
 }
 
-const getProviderToken = (provider) => {
+const getProviderToken = (role) => {
     const tokenPayload = {
-        user_id: 'test-user-id',
-        email: provider.email,
-        role: provider.role,
-        ssn: 'test-provider-ssn'
+        user_id: role === 'ADMIN' ? TEST_ADMIN_ID : TEST_PROVIDER_ID,
+        email: role === 'ADMIN' ? 'admin@test.com' : 'doctor@test.com',
+        role: role,
+        ssn: role === 'ADMIN' ? 'test-admin-ssn' : 'test-provider-ssn'
     }
     return `Bearer ${jwt.sign(tokenPayload, SECRET, { expiresIn: '30m' })}`
 }
@@ -50,10 +41,6 @@ const patientsInDb = async () => {
     return patients.map(p => p.toJSON())
 }
 
-const providersInDb = async () => {
-    const providers = await Provider.findAll()
-    return providers.map(p => p.toJSON())
-}
 
 const recordsInDb = async () => {
     const records = await MedicalRecord.findAll()
@@ -61,12 +48,11 @@ const recordsInDb = async () => {
 }
 
 module.exports = {
-    initialProvider,
-    initialAdmin,
+    TEST_PROVIDER_ID,
+    TEST_ADMIN_ID,
     initialPatient,
     getProviderToken,
     getPatientToken,
     patientsInDb,
-    providersInDb,
     recordsInDb
 }

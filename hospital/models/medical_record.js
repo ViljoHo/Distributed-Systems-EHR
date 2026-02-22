@@ -17,8 +17,7 @@ MedicalRecord.init({
     },
     provider_id: {
         type: DataTypes.UUID,
-        allowNull: false,
-        references: { model: 'providers', key: 'provider_id' }
+        allowNull: false
     },
     diagnosis: {
         type: DataTypes.TEXT,

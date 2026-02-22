@@ -1,7 +1,7 @@
 const router = require('express').Router({ mergeParams: true })
 
 const middleware = require('../util/middleware')
-const { MedicalRecord, Patient, Provider } = require('../models')
+const { MedicalRecord, Patient } = require('../models')
 const { logAuditEvent } = require('../util/auditClient')
 
 router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 'NURSE', 'ADMIN']), async (req, res) => {
@@ -11,14 +11,10 @@ router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 
             return res.status(404).json({ error: 'patient not found' })
         }
 
-        const provider = await Provider.findOne({ where: { email: req.decodedToken.email } })
-        if (!provider) {
-            return res.status(400).json({ error: 'provider profile not found' })
-        }
 
         const record = await MedicalRecord.create({
             patient_id: req.params.patient_id,
-            provider_id: provider.provider_id,
+            provider_id: req.decodedToken.user_id,
             diagnosis: req.body.diagnosis,
             treatment: req.body.treatment,
             notes: req.body.notes,
@@ -47,9 +43,6 @@ router.get('/', middleware.tokenExtractor, middleware.selfOrRole('patient_id', [
 
     const records = await MedicalRecord.findAll({
         where: { patient_id: req.params.patient_id },
-        include: [
-            { model: Provider, attributes: ['name', 'role'] }
-        ],
         limit,
         offset
     })

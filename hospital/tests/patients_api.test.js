@@ -3,7 +3,7 @@ const assert = require('node:assert')
 const supertest = require('supertest')
 const app = require('../app')
 const api = supertest(app)
-const { Patient, Provider, MedicalRecord } = require('../models')
+const { Patient, MedicalRecord } = require('../models')
 const { sequelize, connectToDatabase } = require('../util/db')
 const helper = require('./test_helper')
 
@@ -18,13 +18,9 @@ describe('patients api', () => {
     beforeEach(async () => {
         await MedicalRecord.destroy({ where: {} })
         await Patient.destroy({ where: {} })
-        await Provider.destroy({ where: {} })
 
-        const provider = await Provider.create(helper.initialProvider)
-        const admin = await Provider.create(helper.initialAdmin)
-
-        providerToken = helper.getProviderToken(provider)
-        adminToken = helper.getProviderToken(admin)
+        providerToken = helper.getProviderToken('DOCTOR')
+        adminToken = helper.getProviderToken('ADMIN')
     })
 
     test('create a new patient', async () => {

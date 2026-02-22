@@ -1,14 +1,13 @@
 const router = require('express').Router()
 
 const middleware = require('../util/middleware')
-const { MedicalRecord, Patient, Provider } = require('../models')
+const { MedicalRecord, Patient } = require('../models')
 const { logAuditEvent } = require('../util/auditClient')
 
 const recordFinder = async (req, res, next) => {
     req.record = await MedicalRecord.findByPk(req.params.record_id, {
         include: [
-            { model: Patient, attributes: ['patient_id', 'first_name', 'last_name', 'ssn'] },
-            { model: Provider, attributes: ['provider_id', 'name', 'role'] }
+            { model: Patient, attributes: ['patient_id', 'first_name', 'last_name', 'ssn'] }
         ]
     })
     next()
