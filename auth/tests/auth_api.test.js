@@ -7,6 +7,42 @@ const { User } = require('../models')
 const { sequelize } = require('../util/db')
 const helper = require('./test_helper')
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
+const { SECRET } = require('../util/config')
+
+const getAdminToken = async () => {
+    const saltRounds = 10
+    const passwordHash = await bcrypt.hash('adminpassword', saltRounds)
+    const admin = await User.create({
+        email: 'admin@test.com',
+        password_hash: passwordHash,
+        role: 'ADMIN',
+        ssn: '999999-9999'
+    })
+    return jwt.sign({
+        user_id: admin.user_id,
+        email: admin.email,
+        role: admin.role,
+        ssn: admin.ssn
+    }, SECRET, { expiresIn: '30m' })
+}
+
+const getPatientToken = async () => {
+    const saltRounds = 10
+    const passwordHash = await bcrypt.hash('patientpassword', saltRounds)
+    const patient = await User.create({
+        email: 'patient@test.com',
+        password_hash: passwordHash,
+        role: 'PATIENT',
+        ssn: '888888-8888'
+    })
+    return jwt.sign({
+        user_id: patient.user_id,
+        email: patient.email,
+        role: patient.role,
+        ssn: patient.ssn
+    }, SECRET, { expiresIn: '30m' })
+}
 
 describe('auth api', () => {
     beforeEach(async () => {
@@ -20,11 +56,10 @@ describe('auth api', () => {
     })
 
     describe('registration', () => {
-        test('succeeds with valid data', async () => {
+        test('succeeds with valid data and role is always PATIENT', async () => {
             const newUser = {
                 email: 'new@user.com',
                 password: 'secretpassword',
-                role: 'PATIENT',
                 ssn: '111111-1111'
             }
 
@@ -36,16 +71,32 @@ describe('auth api', () => {
 
             assert.ok(response.body.token)
             assert.strictEqual(response.body.email, newUser.email)
-            assert.strictEqual(response.body.role, newUser.role)
+            assert.strictEqual(response.body.role, 'PATIENT')
 
             const usersAtEnd = await helper.usersInDb()
             assert.strictEqual(usersAtEnd.length, 1)
         })
 
+        test('role is PATIENT even if ADMIN is specified in body', async () => {
+            const newUser = {
+                email: 'sneaky@user.com',
+                password: 'secretpassword',
+                role: 'ADMIN',
+                ssn: '111111-1111'
+            }
+
+            const response = await api
+                .post('/api/v1/auth/register')
+                .send(newUser)
+                .expect(201)
+
+            assert.strictEqual(response.body.role, 'PATIENT')
+        })
+
         test('fails with missing email', async () => {
             const newUser = {
                 password: 'secretpassword',
-                role: 'PATIENT'
+                ssn: '111111-1111'
             }
 
             await api
@@ -54,11 +105,10 @@ describe('auth api', () => {
                 .expect(400)
         })
 
-        test('fails with invalid role', async () => {
+        test('fails with missing ssn', async () => {
             const newUser = {
                 email: 'new@user.com',
-                password: 'secretpassword',
-                role: 'INVALID'
+                password: 'secretpassword'
             }
 
             await api
@@ -71,19 +121,98 @@ describe('auth api', () => {
             const newUser = {
                 email: 'taken@user.com',
                 password: 'secretpassword',
-                role: 'PATIENT'
+                ssn: '222222-2222'
             }
 
-            // Create first user
             await api
                 .post('/api/v1/auth/register')
-                .send({ ...newUser, ssn: '222222-2222' })
+                .send(newUser)
                 .expect(201)
 
-            // Try to create same user again
             await api
                 .post('/api/v1/auth/register')
-                .send({ ...newUser, ssn: '222222-2222' })
+                .send({ ...newUser, ssn: '333333-3333' })
+                .expect(400)
+        })
+    })
+
+    describe('admin user creation (POST /users)', () => {
+        test('succeeds with admin token and valid data', async () => {
+            const adminToken = await getAdminToken()
+
+            const newDoctor = {
+                email: 'doctor@hospital.com',
+                password: 'doctorpass',
+                role: 'DOCTOR',
+                ssn: '444444-4444'
+            }
+
+            const response = await api
+                .post('/api/v1/auth/users')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send(newDoctor)
+                .expect(201)
+                .expect('Content-Type', /application\/json/)
+
+            assert.strictEqual(response.body.email, newDoctor.email)
+            assert.strictEqual(response.body.role, 'DOCTOR')
+            assert.ok(!response.body.token)
+        })
+
+        test('can create NURSE and ADMIN users', async () => {
+            const adminToken = await getAdminToken()
+
+            const nurseRes = await api
+                .post('/api/v1/auth/users')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ email: 'nurse@hospital.com', password: 'nursepass', role: 'NURSE', ssn: '555555-5555' })
+                .expect(201)
+
+            assert.strictEqual(nurseRes.body.role, 'NURSE')
+
+            const adminRes = await api
+                .post('/api/v1/auth/users')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ email: 'admin2@hospital.com', password: 'admin2pass', role: 'ADMIN', ssn: '666666-6666' })
+                .expect(201)
+
+            assert.strictEqual(adminRes.body.role, 'ADMIN')
+        })
+
+        test('rejects PATIENT role (patients must use /register)', async () => {
+            const adminToken = await getAdminToken()
+
+            await api
+                .post('/api/v1/auth/users')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ email: 'patient2@hospital.com', password: 'pass', role: 'PATIENT', ssn: '777777-7777' })
+                .expect(400)
+        })
+
+        test('fails without token', async () => {
+            await api
+                .post('/api/v1/auth/users')
+                .send({ email: 'doctor@hospital.com', password: 'doctorpass', role: 'DOCTOR', ssn: '444444-4444' })
+                .expect(401)
+        })
+
+        test('fails with patient token (not admin)', async () => {
+            const patientToken = await getPatientToken()
+
+            await api
+                .post('/api/v1/auth/users')
+                .set('Authorization', `Bearer ${patientToken}`)
+                .send({ email: 'doctor@hospital.com', password: 'doctorpass', role: 'DOCTOR', ssn: '444444-4444' })
+                .expect(403)
+        })
+
+        test('fails with missing fields', async () => {
+            const adminToken = await getAdminToken()
+
+            await api
+                .post('/api/v1/auth/users')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ email: 'doctor@hospital.com', password: 'doctorpass' })
                 .expect(400)
         })
     })
@@ -141,7 +270,6 @@ describe('auth api', () => {
 
         beforeEach(async () => {
             const saltRounds = 10
-            // Create user
             const passwordHash = await bcrypt.hash(helper.initialUser.password, saltRounds)
             const user = await User.create({
                 email: helper.initialUser.email,
@@ -150,7 +278,6 @@ describe('auth api', () => {
                 ssn: '333333-3333'
             })
 
-            // Login to get token
             const loginRes = await api
                 .post('/api/v1/auth/login')
                 .send({

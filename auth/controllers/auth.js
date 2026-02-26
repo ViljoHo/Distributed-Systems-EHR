@@ -9,18 +9,11 @@ const { logAuditEvent } = require('../util/auditClient')
 
 router.post('/register', async (request, response, next) => {
     try {
-        const { email, password, role, ssn } = request.body
+        const { email, password, ssn } = request.body
 
-        if (!email || !password || !role || !ssn) {
+        if (!email || !password || !ssn) {
             return response.status(400).json({
-                error: 'email, password, role, and ssn are required'
-            })
-        }
-
-        const validRoles = ['PATIENT', 'DOCTOR', 'NURSE', 'ADMIN']
-        if (!validRoles.includes(role)) {
-            return response.status(400).json({
-                error: `role must be one of: ${validRoles.join(', ')}`
+                error: 'email, password, and ssn are required'
             })
         }
 
@@ -30,7 +23,7 @@ router.post('/register', async (request, response, next) => {
         const user = await User.create({
             email,
             password_hash: passwordHash,
-            role,
+            role: 'PATIENT',
             ssn
         })
 
@@ -49,7 +42,7 @@ router.post('/register', async (request, response, next) => {
             resource_type: 'USER',
             resource_id: user.user_id,
             outcome: 'ALLOW',
-            details: { email: user.email }
+            details: { email: user.email, role: user.role }
         })
 
         response.status(201).json({
@@ -57,6 +50,52 @@ router.post('/register', async (request, response, next) => {
             email: user.email,
             role: user.role,
             token
+        })
+    } catch (error) {
+        next(error)
+    }
+})
+
+router.post('/users', middleware.tokenExtractor, middleware.roleExtractor(['ADMIN']), async (request, response, next) => {
+    try {
+        const { email, password, role, ssn } = request.body
+
+        if (!email || !password || !role || !ssn) {
+            return response.status(400).json({
+                error: 'email, password, role, and ssn are required'
+            })
+        }
+
+        const validRoles = ['DOCTOR', 'NURSE', 'ADMIN']
+        if (!validRoles.includes(role)) {
+            return response.status(400).json({
+                error: `role must be one of: ${validRoles.join(', ')}`
+            })
+        }
+
+        const saltRounds = 10
+        const passwordHash = await bcrypt.hash(password, saltRounds)
+
+        const user = await User.create({
+            email,
+            password_hash: passwordHash,
+            role,
+            ssn
+        })
+
+        logAuditEvent({
+            actor_id: request.decodedToken.user_id,
+            action: 'USER_CREATE',
+            resource_type: 'USER',
+            resource_id: user.user_id,
+            outcome: 'ALLOW',
+            details: { email: user.email, role: user.role, created_by: request.decodedToken.email }
+        })
+
+        response.status(201).json({
+            user_id: user.user_id,
+            email: user.email,
+            role: user.role
         })
     } catch (error) {
         next(error)

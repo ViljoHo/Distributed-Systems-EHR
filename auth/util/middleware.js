@@ -15,6 +15,16 @@ const tokenExtractor = (req, res, next) => {
     next()
 }
 
+const roleExtractor = (allowedRoles) => {
+    return (req, res, next) => {
+        const token = req.decodedToken
+        if (allowedRoles.includes(token.role)) {
+            return next()
+        }
+        return res.status(403).json({ error: 'operation not permitted' })
+    }
+}
+
 const errorHandler = (error, request, response, next) => {
     if (error.name === 'ValidationError') {
         return response.status(400).json({ error: error.message })
@@ -35,5 +45,6 @@ const errorHandler = (error, request, response, next) => {
 
 module.exports = {
     errorHandler,
-    tokenExtractor
+    tokenExtractor,
+    roleExtractor
 }

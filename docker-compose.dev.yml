@@ -91,6 +91,9 @@ services:
       - SECRET=salaisuus
       - REDIS_URL=redis://redis:6379
       - SERVICE_NAME=auth-api
+      - ADMIN_EMAIL=admin@hospital.com
+      - ADMIN_PASSWORD=admin
+      - ADMIN_SSN=000000-0000
     depends_on:
       auth-db:
         condition: service_healthy
