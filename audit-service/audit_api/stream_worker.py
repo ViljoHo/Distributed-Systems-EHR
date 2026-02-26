@@ -1,7 +1,7 @@
 import json
-import logging
 import threading
 import time
+import traceback
 
 import redis
 from jsonschema import ValidationError, validate
@@ -10,8 +10,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from audit_api import db
 from audit_api.models import AuditEvent
 from audit_api.utils import FORMAT_CHECKER, load_json_schema
-
-logger = logging.getLogger(__name__)
 
 STREAM_KEY = "audit_events"
 GROUP_NAME = "audit_service_group"
@@ -39,10 +37,11 @@ def _run_consumer(app):
             _ensure_consumer_group_exists(redis_client)
             _process_messages(redis_client, app)
         except redis.ConnectionError as err:
-            logger.error(f"Redis connection error: {err} - retrying in 5s")
+            print(f"Redis connection error: {err} - retrying in 5s")
             time.sleep(5)
         except Exception as err:
-            logger.exception(f"Unexpected error: {err} - retrying in 5s")
+            print(f"Unexpected error: {err} - retrying in 5s")
+            traceback.print_exc()
             time.sleep(5)
 
 
@@ -73,11 +72,13 @@ def _process_messages(redis_client, app):
                 _process_message(app, fields)
                 redis_client.xack(STREAM_KEY, GROUP_NAME, msg_id)
             except ValueError as err:
-                logger.error(f"Invalid message {msg_id}: {err}", exc_info=True)
+                print(f"Invalid message {msg_id}: {err}")
+                traceback.print_exc()
                 # Invalid payload -> will never succeed -> ack to avoid stuck pending messages.
                 redis_client.xack(STREAM_KEY, GROUP_NAME, msg_id)
             except Exception as err:
-                logger.error(f"Failed to process message {msg_id}: {err}", exc_info=True)
+                print(f"Failed to process message {msg_id}: {err}")
+                traceback.print_exc()
 
 
 def _process_message(app, fields):
