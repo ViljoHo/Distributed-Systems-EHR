@@ -23,6 +23,7 @@ def create_app(test_config=None):
         AUTH_JWT_SECRET=os.getenv("AUTH_JWT_SECRET", ""),
         AUTH_JWT_EXPECTED_ISSUER=os.getenv("AUTH_JWT_EXPECTED_ISSUER", ""),
         AUTH_JWT_EXPECTED_AUDIENCE=os.getenv("AUTH_JWT_EXPECTED_AUDIENCE", ""),
+        REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
     )
 
     if test_config is not None:
@@ -50,6 +51,11 @@ def create_app(test_config=None):
     @app.errorhandler(HTTPException)
     def handle_http_exception(error):
         return {"error": error.description}, error.code
+
+    # Start Redis Streams consumer worker (skip during tests and CLI commands)
+    if test_config is None and os.getenv("WERKZEUG_RUN_MAIN") != "true":
+        from . import stream_worker
+        stream_worker.start_worker(app)
 
     return app
 

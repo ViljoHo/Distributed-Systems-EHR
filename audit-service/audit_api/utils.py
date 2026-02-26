@@ -28,28 +28,12 @@ def load_json_schema(file_name):
         return json.load(file)
 
 
-def require_service_token(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        _authenticate_service()
-        return func(*args, **kwargs)
-    return wrapper
-
-
 def require_admin_token(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         _authenticate_admin()
         return func(*args, **kwargs)
     return wrapper
-
-
-def _authenticate_service():
-    token = _token_from_bearer_header()
-    if not token:
-        raise Unauthorized("Missing bearer token")
-
-    _authenticate_service_jwt(token)
 
 
 def _authenticate_admin():
@@ -66,29 +50,6 @@ def _token_from_bearer_header():
         return None
     return authorization[7:]
 
-
-def _authenticate_service_jwt(token):
-    jwt_secret = current_app.config.get("AUTH_JWT_SECRET")
-    expected_issuer = current_app.config.get("AUTH_JWT_EXPECTED_ISSUER")
-    expected_audience = current_app.config.get("AUTH_JWT_EXPECTED_AUDIENCE")
-
-    try:
-        jwt.decode(
-            token,
-            jwt_secret,
-            algorithms=["HS256"],
-            issuer=expected_issuer,
-            audience=expected_audience,
-            options={"require": ["exp", "sub", "iss", "aud"]},
-        )
-    except jwt.ExpiredSignatureError as exc:
-        raise Unauthorized("Token expired") from exc
-    except jwt.MissingRequiredClaimError as exc:
-        raise Unauthorized(f"Invalid token: missing '{exc.claim}' claim") from exc
-    except (jwt.InvalidIssuerError, jwt.InvalidAudienceError) as exc:
-        raise Unauthorized("Invalid token claims") from exc
-    except jwt.PyJWTError as exc:
-        raise Unauthorized("Invalid token") from exc
 
 def _authenticate_admin_jwt(token):
     jwt_secret = current_app.config.get("AUTH_JWT_SECRET")

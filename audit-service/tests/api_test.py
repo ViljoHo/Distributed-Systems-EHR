@@ -6,6 +6,7 @@ import jwt
 import pytest
 
 from audit_api import create_app, db
+from audit_api.models import AuditEvent
 
 TEST_JWT_SECRET = "test-jwt-secret"
 TEST_JWT_ISSUER = "auth-service"
@@ -40,23 +41,6 @@ def client():
     os.unlink(db_file_name)
 
 
-def _service_auth_headers():
-    now = datetime.now(timezone.utc)
-    token = jwt.encode(
-        {
-            "sub": "hospital-api",
-            "iss": TEST_JWT_ISSUER,
-            "aud": TEST_JWT_AUDIENCE,
-            "exp": int((now + timedelta(minutes=10)).timestamp()),
-        },
-        TEST_JWT_SECRET,
-        algorithm="HS256",
-    )
-    return {
-        "Authorization": f"Bearer {token}",
-    }
-
-
 def _admin_auth_headers(role="ADMIN"):
     now = datetime.now(timezone.utc)
     token = jwt.encode(
@@ -72,60 +56,28 @@ def _admin_auth_headers(role="ADMIN"):
     return {"Authorization": f"Bearer {token}"}
 
 
-def _valid_event_payload():
-    return {
+def _insert_event(occurred_at, resource_id):
+    """Insert an AuditEvent directly into the database."""
+    event = AuditEvent()
+    event.deserialize({
         "source_service": "hospital-api",
         "source_node_id": "hospital-1",
         "action": "PATIENT_READ",
         "resource_type": "PATIENT",
-        "resource_id": "123",
+        "resource_id": resource_id,
         "outcome": "ALLOW",
-        "occurred_at": "2026-02-18T12:00:00Z",
-    }
+        "occurred_at": occurred_at,
+    })
+    db.session.add(event)
+    db.session.commit()
+    return event
 
 
-def _post_event(client, occurred_at, resource_id):
-    payload = _valid_event_payload()
-    payload["occurred_at"] = occurred_at
-    payload["resource_id"] = resource_id
-    return client.post(
-        "/internal/v1/audit/events/",
-        json=payload,
-        headers=_service_auth_headers(),
-    )
-
-
-def test_post_event_rejects_invalid_datetime(client):
-    payload = _valid_event_payload()
-    payload["occurred_at"] = "not-a-date"
-
-    response = client.post(
-        "/internal/v1/audit/events/",
-        json=payload,
-        headers=_service_auth_headers(),
-    )
-    assert response.status_code == 400
-
-
-def test_post_event_rejects_missing_occurred_at(client):
-    payload = _valid_event_payload()
-    payload.pop("occurred_at")
-
-    response = client.post(
-        "/internal/v1/audit/events/",
-        json=payload,
-        headers=_service_auth_headers(),
-    )
-    assert response.status_code == 400
-
-
-def test_post_event_accepts_rfc3339_datetime(client):
-    response = client.post(
-        "/internal/v1/audit/events/",
-        json=_valid_event_payload(),
-        headers=_service_auth_headers(),
-    )
-    assert response.status_code == 201
+def test_health_check(client):
+    response = client.get("/internal/v1/health")
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["status"] == "ok"
 
 
 def test_get_events_rejects_invalid_from_datetime(client):
@@ -134,13 +86,6 @@ def test_get_events_rejects_invalid_from_datetime(client):
         headers=_admin_auth_headers(),
     )
     assert response.status_code == 400
-
-
-def test_health_check(client):
-    response = client.get("/internal/v1/health")
-    assert response.status_code == 200
-    body = response.get_json()
-    assert body["status"] == "ok"
 
 
 def test_get_events_rejects_invalid_to_datetime(client):
@@ -152,9 +97,9 @@ def test_get_events_rejects_invalid_to_datetime(client):
 
 
 def test_get_events_filters_by_from_and_to(client):
-    assert _post_event(client, "2026-02-18T10:00:00Z", "early").status_code == 201
-    assert _post_event(client, "2026-02-18T12:00:00Z", "middle").status_code == 201
-    assert _post_event(client, "2026-02-18T14:00:00Z", "late").status_code == 201
+    _insert_event("2026-02-18T10:00:00Z", "early")
+    _insert_event("2026-02-18T12:00:00Z", "middle")
+    _insert_event("2026-02-18T14:00:00Z", "late")
 
     response = client.get(
         "/internal/v1/audit/events/?from=2026-02-18T11:00:00Z&to=2026-02-18T13:00:00Z",
@@ -168,7 +113,7 @@ def test_get_events_filters_by_from_and_to(client):
 
 
 def test_get_events_allows_admin_user_token(client):
-    assert _post_event(client, "2026-02-18T12:00:00Z", "middle").status_code == 201
+    _insert_event("2026-02-18T12:00:00Z", "test-resource")
 
     response = client.get(
         "/internal/v1/audit/events/",
@@ -179,18 +124,32 @@ def test_get_events_allows_admin_user_token(client):
     assert len(items) == 1
 
 
-def test_post_event_rejects_admin_user_token(client):
-    response = client.post(
+def test_get_events_rejects_non_admin_token(client):
+    response = client.get(
         "/internal/v1/audit/events/",
-        json=_valid_event_payload(),
-        headers=_admin_auth_headers(),
+        headers=_admin_auth_headers(role="DOCTOR"),
     )
+    assert response.status_code == 403
+
+
+def test_get_events_rejects_missing_token(client):
+    response = client.get("/internal/v1/audit/events/")
     assert response.status_code == 401
 
 
-def test_get_events_rejects_service_token(client):
-    response = client.get(
+def test_post_events_returns_405(client):
+    """POST endpoint has been removed — ingestion is via Redis Streams only."""
+    response = client.post(
         "/internal/v1/audit/events/",
-        headers=_service_auth_headers(),
+        json={
+            "source_service": "hospital-api",
+            "source_node_id": "hospital-1",
+            "action": "PATIENT_READ",
+            "resource_type": "PATIENT",
+            "resource_id": "123",
+            "outcome": "ALLOW",
+            "occurred_at": "2026-02-18T12:00:00Z",
+        },
+        headers=_admin_auth_headers(),
     )
-    assert response.status_code == 403
+    assert response.status_code == 405

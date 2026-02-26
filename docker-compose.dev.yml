@@ -1,5 +1,16 @@
 services:
 
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    container_name: redis
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   hospital_1:
     build:
       context: ./hospital
@@ -12,14 +23,14 @@ services:
       - READ_DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db-primary:5432/postgres
       - PORT=3000
       - SECRET=salaisuus
-      - SERVICE_API_KEY=shared-service-api-key
-      - AUDIT_SERVICE_URL=http://audit-service:5004
-      - AUTH_SERVICE_URL=http://auth:3001
+      - REDIS_URL=redis://redis:6379
       - SERVICE_NAME=hospital-api
       - SERVICE_NUMBER=1
     depends_on:
-      - hospital-db-primary
-      - audit-service
+      hospital-db-primary:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   hospital_2:
     build:
@@ -33,15 +44,16 @@ services:
       - READ_DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db-replica-1:5432/postgres
       - PORT=3000
       - SECRET=salaisuus
-      - SERVICE_API_KEY=shared-service-api-key
-      - AUDIT_SERVICE_URL=http://audit-service:5004
-      - AUTH_SERVICE_URL=http://auth:3001
+      - REDIS_URL=redis://redis:6379
       - SERVICE_NAME=hospital-api
       - SERVICE_NUMBER=2
     depends_on:
-      - hospital-db-primary
-      - hospital-db-replica-1
-      - audit-service
+      hospital-db-primary:
+        condition: service_healthy
+      hospital-db-replica-1:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   hospital_3:
     build:
@@ -55,15 +67,16 @@ services:
       - READ_DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db-replica-2:5432/postgres
       - PORT=3000
       - SECRET=salaisuus
-      - SERVICE_API_KEY=shared-service-api-key
-      - AUDIT_SERVICE_URL=http://audit-service:5004
-      - AUTH_SERVICE_URL=http://auth:3001
+      - REDIS_URL=redis://redis:6379
       - SERVICE_NAME=hospital-api
       - SERVICE_NUMBER=3
     depends_on:
-      - hospital-db-primary
-      - hospital-db-replica-2
-      - audit-service
+      hospital-db-primary:
+        condition: service_healthy
+      hospital-db-replica-2:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   auth:
     build:
@@ -76,13 +89,13 @@ services:
       - DATABASE_URL=postgres://postgres:mysecretpassword@auth-db:5432/postgres
       - PORT=3001
       - SECRET=salaisuus
-      - SERVICE_API_KEY=shared-service-api-key
-      - AUDIT_SERVICE_URL=http://audit-service:5004
-      - AUTH_SERVICE_URL=http://auth:3001
+      - REDIS_URL=redis://redis:6379
       - SERVICE_NAME=auth-api
     depends_on:
-      - auth-db
-      - audit-service
+      auth-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   audit-service:
     build:
@@ -93,11 +106,14 @@ services:
       - PORT=5004
       - SECRET_KEY=dev
       - DATABASE_URL=postgresql+psycopg2://postgres:mysecretpassword@audit_db:5432/audit_service
+      - REDIS_URL=redis://redis:6379
       - AUTH_JWT_SECRET=salaisuus
       - AUTH_JWT_EXPECTED_ISSUER=auth-service
       - AUTH_JWT_EXPECTED_AUDIENCE=audit-service
     command: sh -c "flask --app=audit_api init-db && gunicorn --bind 0.0.0.0:5004 --workers 2 app:app"
     depends_on:
+      redis:
+        condition: service_healthy
       audit_db:
         condition: service_healthy
 
@@ -131,6 +147,11 @@ services:
     volumes:
       - hospital_primary_data:/bitnami/postgresql
     container_name: hospital-db-primary
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   hospital-db-replica-1:
     image: bitnami/postgresql:latest
@@ -147,8 +168,14 @@ services:
     volumes:
       - hospital_replica_1_data:/bitnami/postgresql
     container_name: hospital-db-replica-1
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     depends_on:
-      - hospital-db-primary
+      hospital-db-primary:
+        condition: service_healthy
 
   hospital-db-replica-2:
     image: bitnami/postgresql:latest
@@ -165,8 +192,14 @@ services:
     volumes:
       - hospital_replica_2_data:/bitnami/postgresql
     container_name: hospital-db-replica-2
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     depends_on:
-      - hospital-db-primary
+      hospital-db-primary:
+        condition: service_healthy
 
   auth-db:
     image: postgres
@@ -177,6 +210,11 @@ services:
     volumes:
       - auth_data:/var/lib/postgresql
     container_name: auth-db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   nginx:
     image: nginx:1.20.1

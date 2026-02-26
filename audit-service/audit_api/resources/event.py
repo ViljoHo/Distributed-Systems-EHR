@@ -1,19 +1,11 @@
-from flask import Response, request, url_for
+from flask import request
 from flask_restful import Resource
-from jsonschema import Draft202012Validator, ValidationError, validate
-from werkzeug.exceptions import BadRequest, UnsupportedMediaType
 
-from audit_api import db
 from audit_api.models import AuditEvent
 from audit_api.utils import (
-    load_json_schema,
     parse_occurred_at_or_raise,
     require_admin_token,
-    require_service_token,
 )
-
-SCHEMA = load_json_schema("audit_event.json")
-FORMAT_CHECKER = Draft202012Validator.FORMAT_CHECKER
 
 
 class AuditEventCollection(Resource):
@@ -47,29 +39,6 @@ class AuditEventCollection(Resource):
         )
 
         return [row.serialize() for row in rows]
-
-    @require_service_token
-    def post(self):
-        if not request.json:
-            raise UnsupportedMediaType
-
-        try:
-            validate(request.json, SCHEMA, format_checker=FORMAT_CHECKER)
-        except ValidationError as error:
-            raise BadRequest(description=str(error))
-
-        event = AuditEvent()
-        event.deserialize(request.json)
-
-        db.session.add(event)
-        db.session.commit()
-
-        return Response(
-            status=201,
-            headers={
-                "Location": url_for("api.auditeventitem", audit_event=event)
-            },
-        )
 
 
 class AuditEventItem(Resource):
