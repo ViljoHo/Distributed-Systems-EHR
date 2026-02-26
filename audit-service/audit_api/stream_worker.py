@@ -74,7 +74,7 @@ def _process_messages(redis_client, app):
             except ValueError as err:
                 print(f"Invalid message {msg_id}: {err}")
                 traceback.print_exc()
-                # Invalid payload -> will never succeed -> ack to avoid stuck pending messages.
+                # Invalid payload -> will never succeed -> ack to avoid stuck pending messages
                 redis_client.xack(STREAM_KEY, GROUP_NAME, msg_id)
             except Exception as err:
                 print(f"Failed to process message {msg_id}: {err}")
