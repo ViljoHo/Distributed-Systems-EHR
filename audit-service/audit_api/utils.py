@@ -61,12 +61,12 @@ def _authenticate_admin_jwt(token):
             algorithms=["HS256"],
             options={"require": ["exp"], "verify_aud": False},
         )
-    except jwt.ExpiredSignatureError as exc:
-        raise Unauthorized("Token expired") from exc
-    except jwt.MissingRequiredClaimError as exc:
-        raise Unauthorized(f"Invalid token: missing '{exc.claim}' claim") from exc
-    except jwt.PyJWTError as exc:
-        raise Unauthorized("Invalid token") from exc
+    except jwt.ExpiredSignatureError as err:
+        raise Unauthorized("Token expired") from err
+    except jwt.MissingRequiredClaimError as err:
+        raise Unauthorized(f"Invalid token: missing '{err.claim}' claim") from err
+    except jwt.PyJWTError as err:
+        raise Unauthorized("Invalid token") from err
 
     if payload.get("role") != "ADMIN":
         raise Forbidden("Admin role required")
@@ -93,11 +93,11 @@ def parse_occurred_at_or_raise(value, field_name):
 
     try:
         FORMAT_CHECKER.check(value, "date-time")
-    except FormatError as exc:
-        raise BadRequest(description=f"{field_name} must be RFC3339 date-time") from exc
+    except FormatError as err:
+        raise BadRequest(description=f"{field_name} must be RFC3339 date-time") from err
 
     normalized = value.replace("Z", "+00:00")
     try:
         return datetime.fromisoformat(normalized)
-    except ValueError as exc:
-        raise BadRequest(description=f"{field_name} must be RFC3339 date-time") from exc
+    except ValueError as err:
+        raise BadRequest(description=f"{field_name} must be RFC3339 date-time") from err

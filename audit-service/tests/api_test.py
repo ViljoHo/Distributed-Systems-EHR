@@ -9,8 +9,6 @@ from audit_api import create_app, db
 from audit_api.models import AuditEvent
 
 TEST_JWT_SECRET = "test-jwt-secret"
-TEST_JWT_ISSUER = "auth-service"
-TEST_JWT_AUDIENCE = "audit-service"
 
 
 @pytest.fixture
@@ -21,8 +19,6 @@ def client():
         "SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_file_name,
         "TESTING": True,
         "AUTH_JWT_SECRET": TEST_JWT_SECRET,
-        "AUTH_JWT_EXPECTED_ISSUER": TEST_JWT_ISSUER,
-        "AUTH_JWT_EXPECTED_AUDIENCE": TEST_JWT_AUDIENCE,
     }
 
     app = create_app(config)

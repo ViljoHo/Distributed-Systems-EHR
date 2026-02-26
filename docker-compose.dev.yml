@@ -108,9 +108,7 @@ services:
       - DATABASE_URL=postgresql+psycopg2://postgres:mysecretpassword@audit_db:5432/audit_service
       - REDIS_URL=redis://redis:6379
       - AUTH_JWT_SECRET=salaisuus
-      - AUTH_JWT_EXPECTED_ISSUER=auth-service
-      - AUTH_JWT_EXPECTED_AUDIENCE=audit-service
-    command: sh -c "flask --app=audit_api init-db && gunicorn --bind 0.0.0.0:5004 --workers 2 app:app"
+    command: sh -c "flask --app=audit_api init-db && gunicorn --bind 0.0.0.0:5004 --workers 1 app:app"
     depends_on:
       redis:
         condition: service_healthy

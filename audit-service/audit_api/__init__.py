@@ -21,15 +21,14 @@ def create_app(test_config=None):
         ),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         AUTH_JWT_SECRET=os.getenv("AUTH_JWT_SECRET", ""),
-        AUTH_JWT_EXPECTED_ISSUER=os.getenv("AUTH_JWT_EXPECTED_ISSUER", ""),
-        AUTH_JWT_EXPECTED_AUDIENCE=os.getenv("AUTH_JWT_EXPECTED_AUDIENCE", ""),
         REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
     )
 
     if test_config is not None:
         app.config.from_mapping(test_config)
 
-    _validate_auth_config(app.config)
+    if not str(app.config.get("AUTH_JWT_SECRET", "")).strip():
+        raise RuntimeError("AUTH_JWT_SECRET is required")
 
     try:
         os.makedirs(app.instance_path)
@@ -52,18 +51,19 @@ def create_app(test_config=None):
     def handle_http_exception(error):
         return {"error": error.description}, error.code
 
-    # Start Redis Streams consumer worker (skip during tests and CLI commands)
-    if test_config is None and os.getenv("WERKZEUG_RUN_MAIN") != "true":
+    # Don't start worker in tests / cli commands
+    if _should_start_stream_worker(test_config):
         from . import stream_worker
         stream_worker.start_worker(app)
 
     return app
 
 
-def _validate_auth_config(config):
-    if not str(config.get("AUTH_JWT_SECRET", "")).strip():
-        raise RuntimeError("AUTH_JWT_SECRET is required")
-    if not str(config.get("AUTH_JWT_EXPECTED_ISSUER", "")).strip():
-        raise RuntimeError("AUTH_JWT_EXPECTED_ISSUER is required")
-    if not str(config.get("AUTH_JWT_EXPECTED_AUDIENCE", "")).strip():
-        raise RuntimeError("AUTH_JWT_EXPECTED_AUDIENCE is required")
+def _should_start_stream_worker(test_config):
+    if test_config is not None:
+        return False
+
+    if os.getenv("FLASK_RUN_FROM_CLI") == "true":
+        return os.getenv("WERKZEUG_RUN_MAIN") == "true"
+
+    return True

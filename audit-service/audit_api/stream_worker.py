@@ -1,17 +1,22 @@
 import json
 import logging
-import os
 import threading
 import time
 
 import redis
+from jsonschema import ValidationError, validate
+from sqlalchemy.exc import SQLAlchemyError
+
+from audit_api import db
+from audit_api.models import AuditEvent
+from audit_api.utils import FORMAT_CHECKER, load_json_schema
 
 logger = logging.getLogger(__name__)
 
 STREAM_KEY = "audit_events"
 GROUP_NAME = "audit_service_group"
-CONSUMER_NAME = f"consumer_{os.getpid()}"
-BLOCK_MS = 5000
+CONSUMER_NAME = "audit_service_consumer"
+SCHEMA = load_json_schema("audit_event.json")
 
 
 def start_worker(app):
@@ -22,7 +27,6 @@ def start_worker(app):
         name="redis-stream-worker",
     )
     thread.start()
-    logger.info("Redis stream worker started (thread=%s)", thread.name)
     return thread
 
 
@@ -31,69 +35,72 @@ def _run_consumer(app):
 
     while True:
         try:
-            r = redis.from_url(redis_url, decode_responses=True)
-            _ensure_consumer_group(r)
-            logger.info("Redis stream consumer connected, reading from '%s'", STREAM_KEY)
-            _read_loop(r, app)
-        except redis.ConnectionError as exc:
-            logger.error("Redis connection lost: %s — retrying in 5s", exc)
+            redis_client = redis.from_url(redis_url, decode_responses=True)
+            _ensure_consumer_group_exists(redis_client)
+            _process_messages(redis_client, app)
+        except redis.ConnectionError as err:
+            logger.error(f"Redis connection error: {err} - retrying in 5s")
             time.sleep(5)
-        except Exception as exc:
-            logger.exception("Unexpected error in stream worker: %s — retrying in 5s", exc)
+        except Exception as err:
+            logger.exception(f"Unexpected error: {err} - retrying in 5s")
             time.sleep(5)
 
 
-def _ensure_consumer_group(r):
+def _ensure_consumer_group_exists(redis_client):
     try:
-        r.xgroup_create(STREAM_KEY, GROUP_NAME, id="0", mkstream=True)
-        logger.info("Created consumer group '%s' on stream '%s'", GROUP_NAME, STREAM_KEY)
-    except redis.ResponseError as exc:
-        if "BUSYGROUP" in str(exc):
-            logger.debug("Consumer group '%s' already exists", GROUP_NAME)
-        else:
-            raise
+        redis_client.xgroup_create(STREAM_KEY, GROUP_NAME, id="0", mkstream=True)
+    except redis.ResponseError as err:
+        if "BUSYGROUP" in str(err):
+            return  # group already created, continue
+        raise
 
 
-def _read_loop(r, app):
-    from .models import AuditEvent
-    from . import db
-
+def _process_messages(redis_client, app):
     while True:
-        results = r.xreadgroup(
+        results = redis_client.xreadgroup(
             GROUP_NAME,
             CONSUMER_NAME,
             {STREAM_KEY: ">"},
             count=10,
-            block=BLOCK_MS,
+            block=5000,
         )
-
         if not results:
             continue
 
-        for stream_name, messages in results:
-            for msg_id, fields in messages:
-                try:
-                    _process_message(app, db, AuditEvent, msg_id, fields)
-                    r.xack(STREAM_KEY, GROUP_NAME, msg_id)
-                except Exception as exc:
-                    logger.error(
-                        "Failed to process message %s: %s", msg_id, exc,
-                        exc_info=True,
-                    )
+        _, messages = results[0]
+        for msg_id, fields in messages:
+            try:
+                _process_message(app, fields)
+                redis_client.xack(STREAM_KEY, GROUP_NAME, msg_id)
+            except ValueError as err:
+                logger.error(f"Invalid message {msg_id}: {err}", exc_info=True)
+                # Invalid payload -> will never succeed -> ack to avoid stuck pending messages.
+                redis_client.xack(STREAM_KEY, GROUP_NAME, msg_id)
+            except Exception as err:
+                logger.error(f"Failed to process message {msg_id}: {err}", exc_info=True)
 
 
-def _process_message(app, db, AuditEvent, msg_id, fields):
+def _process_message(app, fields):
     raw = fields.get("data")
-    if not raw:
-        logger.warning("Message %s has no 'data' field, skipping", msg_id)
-        return
+    if raw is None:
+        raise ValueError("Missing 'data' field")
 
-    payload = json.loads(raw)
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as err:
+        raise ValueError("Invalid JSON payload") from err
+
+    try:
+        validate(payload, SCHEMA, format_checker=FORMAT_CHECKER)
+    except ValidationError as err:
+        raise ValueError(str(err)) from err
 
     with app.app_context():
         event = AuditEvent()
-        event.deserialize(payload)
+        event.deserialize(json_dict=payload)
         db.session.add(event)
-        db.session.commit()
-
-    logger.debug("Persisted audit event from message %s", msg_id)
+        try:
+            db.session.commit()
+        except SQLAlchemyError as err:
+            db.session.rollback()
+            raise RuntimeError(f"Database error: {err}") from err
