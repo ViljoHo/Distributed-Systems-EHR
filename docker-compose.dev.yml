@@ -2,11 +2,12 @@ services:
 
   redis:
     image: redis:latest
+    command: redis-server --requirepass myredispassword
     ports:
       - 6379:6379
     container_name: redis
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: [ "CMD", "redis-cli", "-a", "myredispassword", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -23,7 +24,7 @@ services:
       - READ_DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db-primary:5432/postgres
       - PORT=3000
       - SECRET=salaisuus
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://:myredispassword@redis:6379
       - SERVICE_NAME=hospital-api
       - SERVICE_NUMBER=1
     depends_on:
@@ -44,7 +45,7 @@ services:
       - READ_DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db-replica-1:5432/postgres
       - PORT=3000
       - SECRET=salaisuus
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://:myredispassword@redis:6379
       - SERVICE_NAME=hospital-api
       - SERVICE_NUMBER=2
     depends_on:
@@ -67,7 +68,7 @@ services:
       - READ_DATABASE_URL=postgres://postgres:mysecretpassword@hospital-db-replica-2:5432/postgres
       - PORT=3000
       - SECRET=salaisuus
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://:myredispassword@redis:6379
       - SERVICE_NAME=hospital-api
       - SERVICE_NUMBER=3
     depends_on:
@@ -89,7 +90,7 @@ services:
       - DATABASE_URL=postgres://postgres:mysecretpassword@auth-db:5432/postgres
       - PORT=3001
       - SECRET=salaisuus
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://:myredispassword@redis:6379
       - SERVICE_NAME=auth-api
       - ADMIN_EMAIL=admin@hospital.com
       - ADMIN_PASSWORD=admin
@@ -109,7 +110,7 @@ services:
       - PORT=5004
       - SECRET_KEY=dev
       - DATABASE_URL=postgresql+psycopg2://postgres:mysecretpassword@audit_db:5432/audit_service
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://:myredispassword@redis:6379
       - AUTH_JWT_SECRET=salaisuus
     command: sh -c "flask --app=audit_api init-db && gunicorn --bind 0.0.0.0:5004 --workers 1 app:app"
     depends_on:

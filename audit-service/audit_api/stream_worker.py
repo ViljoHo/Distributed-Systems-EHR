@@ -29,7 +29,7 @@ def start_worker(app):
 
 
 def _run_consumer(app):
-    redis_url = app.config.get("REDIS_URL", "redis://localhost:6379")
+    redis_url = app.config.get("REDIS_URL")
 
     while True:
         try:

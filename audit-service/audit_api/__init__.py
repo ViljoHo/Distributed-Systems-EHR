@@ -21,7 +21,7 @@ def create_app(test_config=None):
         ),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         AUTH_JWT_SECRET=os.getenv("AUTH_JWT_SECRET", ""),
-        REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
+        REDIS_URL=os.getenv("REDIS_URL"),
     )
 
     if test_config is not None:
