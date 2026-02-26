@@ -53,7 +53,6 @@ def _admin_auth_headers(role="ADMIN"):
 
 
 def _insert_event(occurred_at, resource_id):
-    """Insert an AuditEvent directly into the database."""
     event = AuditEvent()
     event.deserialize({
         "source_service": "hospital-api",
@@ -131,21 +130,3 @@ def test_get_events_rejects_non_admin_token(client):
 def test_get_events_rejects_missing_token(client):
     response = client.get("/internal/v1/audit/events/")
     assert response.status_code == 401
-
-
-def test_post_events_returns_405(client):
-    """POST endpoint has been removed — ingestion is via Redis Streams only."""
-    response = client.post(
-        "/internal/v1/audit/events/",
-        json={
-            "source_service": "hospital-api",
-            "source_node_id": "hospital-1",
-            "action": "PATIENT_READ",
-            "resource_type": "PATIENT",
-            "resource_id": "123",
-            "outcome": "ALLOW",
-            "occurred_at": "2026-02-18T12:00:00Z",
-        },
-        headers=_admin_auth_headers(),
-    )
-    assert response.status_code == 405
