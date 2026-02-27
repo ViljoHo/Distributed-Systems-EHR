@@ -6,7 +6,6 @@ module.exports = {
             console.log('Constraint not found or already removed:', err.message)
         })
 
-        
         await queryInterface.dropTable('providers')
     },
     down: async ({ context: queryInterface }) => {
