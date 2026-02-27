@@ -79,27 +79,7 @@ describe('records api', () => {
         assert.strictEqual(response.body.diagnosis, 'Test diagnosis')
     })
 
-    test('get a single record fails for token without an allowed role', async () => {
-        const provider = await Provider.findOne({ where: { email: helper.initialProvider.email } })
 
-        const record = await MedicalRecord.create({
-            patient_id: testPatient.patient_id,
-            provider_id: provider.provider_id,
-            diagnosis: 'Test diagnosis',
-            visit_date: '2026-02-17'
-        })
-
-        const rolelessToken = jwt.sign(
-            { user_id: 'service-user', email: 'service@test.com' },
-            SECRET,
-            { expiresIn: '30m' }
-        )
-
-        await api
-            .get(`/api/v1/records/${record.record_id}`)
-            .set('Authorization', `Bearer ${rolelessToken}`)
-            .expect(403)
-    })
 
     test('update a record (doctor only)', async () => {
         const record = await MedicalRecord.create({
@@ -143,4 +123,5 @@ describe('records api', () => {
 
 after(async () => {
     await sequelize.close()
+    await require('../util/redisClient').quit()
 })

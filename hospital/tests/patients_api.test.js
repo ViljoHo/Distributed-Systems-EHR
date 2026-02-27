@@ -112,8 +112,50 @@ describe('patients api', () => {
         const patientsAtEnd = await helper.patientsInDb()
         assert.strictEqual(patientsAtEnd.length, 0)
     })
+
+    test('GET /me returns patient info with records for PATIENT role', async () => {
+        const patient = await Patient.create(helper.initialPatient)
+
+        await MedicalRecord.create({
+            patient_id: patient.patient_id,
+            provider_id: helper.TEST_PROVIDER_ID,
+            diagnosis: 'Test diagnosis',
+            visit_date: '2026-02-17'
+        })
+
+        const patientToken = helper.getPatientToken(patient)
+
+        const response = await api
+            .get('/api/v1/patients/me')
+            .set('Authorization', patientToken)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+
+        assert.strictEqual(response.body.first_name, 'Test')
+        assert.strictEqual(response.body.ssn, patient.ssn)
+        assert.strictEqual(response.body.medical_records.length, 1)
+        assert.strictEqual(response.body.medical_records[0].diagnosis, 'Test diagnosis')
+    })
+
+    test('GET /me returns 404 if no patient profile matches SSN', async () => {
+        const fakePatient = { email: 'nobody@test.com', ssn: 'nonexistent-ssn' }
+        const patientToken = helper.getPatientToken(fakePatient)
+
+        await api
+            .get('/api/v1/patients/me')
+            .set('Authorization', patientToken)
+            .expect(404)
+    })
+
+    test('GET /me returns 403 for non-patient roles', async () => {
+        await api
+            .get('/api/v1/patients/me')
+            .set('Authorization', providerToken)
+            .expect(403)
+    })
 })
 
 after(async () => {
     await sequelize.close()
+    await require('../util/redisClient').quit()
 })

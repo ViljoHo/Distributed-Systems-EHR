@@ -316,4 +316,5 @@ describe('auth api', () => {
 
 after(async () => {
     await sequelize.close()
+    await require('../util/redisClient').quit()
 })

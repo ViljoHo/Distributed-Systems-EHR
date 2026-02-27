@@ -2,7 +2,7 @@ const router = require('express').Router()
 const { Op } = require('sequelize')
 
 const middleware = require('../util/middleware')
-const { Patient } = require('../models')
+const { Patient, MedicalRecord } = require('../models')
 const { logAuditEvent } = require('../util/auditClient')
 
 router.post('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', 'ADMIN']), async (req, res) => {
@@ -62,6 +62,28 @@ router.get('/', middleware.tokenExtractor, middleware.roleExtractor(['DOCTOR', '
     })
 
     res.json(patients)
+})
+
+router.get('/me', middleware.tokenExtractor, middleware.roleExtractor(['PATIENT']), async (req, res) => {
+    const patient = await Patient.findOne({
+        where: { ssn: req.decodedToken.ssn },
+        include: [{ model: MedicalRecord }]
+    })
+
+    if (!patient) {
+        return res.status(404).json({ error: 'patient profile not found' })
+    }
+
+    logAuditEvent({
+        actor_id: req.decodedToken.user_id,
+        action: 'PATIENT_SELF_READ',
+        resource_type: 'PATIENT',
+        resource_id: patient.patient_id,
+        patient_id: patient.patient_id,
+        outcome: 'ALLOW'
+    })
+
+    res.json(patient)
 })
 
 router.get('/:patient_id', middleware.tokenExtractor, middleware.selfOrRole('patient_id', ['DOCTOR', 'NURSE', 'ADMIN']), async (req, res) => {
