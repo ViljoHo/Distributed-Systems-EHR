@@ -69,7 +69,7 @@ def _insert_event(occurred_at, resource_id):
 
 
 def test_health_check(client):
-    response = client.get("/internal/v1/health")
+    response = client.get("/api/v1/health")
     assert response.status_code == 200
     body = response.get_json()
     assert body["status"] == "ok"
@@ -77,7 +77,7 @@ def test_health_check(client):
 
 def test_get_events_rejects_invalid_from_datetime(client):
     response = client.get(
-        "/internal/v1/audit/events/?from=not-a-date",
+        "/api/v1/audit/events/?from=not-a-date",
         headers=_admin_auth_headers(),
     )
     assert response.status_code == 400
@@ -85,7 +85,7 @@ def test_get_events_rejects_invalid_from_datetime(client):
 
 def test_get_events_rejects_invalid_to_datetime(client):
     response = client.get(
-        "/internal/v1/audit/events/?to=not-a-date",
+        "/api/v1/audit/events/?to=not-a-date",
         headers=_admin_auth_headers(),
     )
     assert response.status_code == 400
@@ -97,7 +97,7 @@ def test_get_events_filters_by_from_and_to(client):
     _insert_event("2026-02-18T14:00:00Z", "late")
 
     response = client.get(
-        "/internal/v1/audit/events/?from=2026-02-18T11:00:00Z&to=2026-02-18T13:00:00Z",
+        "/api/v1/audit/events/?from=2026-02-18T11:00:00Z&to=2026-02-18T13:00:00Z",
         headers=_admin_auth_headers(),
     )
 
@@ -111,7 +111,7 @@ def test_get_events_allows_admin_user_token(client):
     _insert_event("2026-02-18T12:00:00Z", "test-resource")
 
     response = client.get(
-        "/internal/v1/audit/events/",
+        "/api/v1/audit/events/",
         headers=_admin_auth_headers(),
     )
     assert response.status_code == 200
@@ -121,12 +121,12 @@ def test_get_events_allows_admin_user_token(client):
 
 def test_get_events_rejects_non_admin_token(client):
     response = client.get(
-        "/internal/v1/audit/events/",
+        "/api/v1/audit/events/",
         headers=_admin_auth_headers(role="DOCTOR"),
     )
     assert response.status_code == 403
 
 
 def test_get_events_rejects_missing_token(client):
-    response = client.get("/internal/v1/audit/events/")
+    response = client.get("/api/v1/audit/events/")
     assert response.status_code == 401
