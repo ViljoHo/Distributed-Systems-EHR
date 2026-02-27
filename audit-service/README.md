@@ -2,15 +2,15 @@
 
 ## Endpoints
 
-- `GET /internal/v1/health`
-- `GET /internal/v1/audit/events/`
-- `GET /internal/v1/audit/events/<event_id>/`
-- `GET /internal/v1/audit/patients/<patient_id>/timeline/`
+- `GET /api/v1/health`
+- `GET /api/v1/audit/events/`
+- `GET /api/v1/audit/events/<event_id>/`
+- `GET /api/v1/audit/patients/<patient_id>/timeline/`
 
-`GET /internal/v1/audit/events/` query params: `patient_id`, `actor_id`, `action`, `outcome`, `from`, `to`.
-`GET /internal/v1/audit/patients/<patient_id>/timeline/` query params: `from`, `to`.
+`GET /api/v1/audit/events/` query params: `patient_id`, `actor_id`, `action`, `outcome`, `from`, `to`.
+`GET /api/v1/audit/patients/<patient_id>/timeline/` query params: `from`, `to`.
 
-All `/internal/v1/audit/*` endpoints require `Authorization: Bearer <token>`.
+All `/api/v1/audit/*` endpoints require `Authorization: Bearer <token>`.
 
 ## Event ingestion
 
@@ -30,11 +30,11 @@ All `/internal/v1/audit/*` endpoints require `Authorization: Bearer <token>`.
 1. Copy `.env.example` to `.env`.
 2. Reset old volumes:
     - `docker compose -f docker-compose.dev.yml down -v`
-    - `docker volume rm audit-service-dev-postgres-volume 2>/dev/null || true`
+    - `docker volume rm audit-service-dev-postgres-volume`
 3. Start API + DB + Redis:
     - `docker compose -f docker-compose.dev.yml up --build`
 4. Health check:
-    - `curl http://localhost:5004/internal/v1/health`
+    - `curl http://localhost:5004/api/v1/health`
 
 
 ## Extra commands

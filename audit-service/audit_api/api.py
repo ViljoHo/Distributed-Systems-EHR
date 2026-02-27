@@ -5,7 +5,7 @@ from .resources.event import AuditEventCollection, AuditEventItem
 from .resources.health import Health
 from .resources.patient_timeline import PatientTimeline
 
-api_bp = Blueprint("api", __name__, url_prefix="/internal/v1")
+api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
 api = Api(api_bp)
 
 api.add_resource(Health, "/health")
