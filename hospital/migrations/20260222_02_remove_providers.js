@@ -2,17 +2,15 @@ const { DataTypes } = require('sequelize')
 
 module.exports = {
     up: async ({ context: queryInterface }) => {
-        // Remove the foreign key constraint from medical_records
-        // The constraint name is usually table_column_fkey
         await queryInterface.removeConstraint('medical_records', 'medical_records_provider_id_fkey').catch(err => {
             console.log('Constraint not found or already removed:', err.message)
         })
 
-        // Drop the providers table
+        
         await queryInterface.dropTable('providers')
     },
     down: async ({ context: queryInterface }) => {
-        // Recreate the providers table
+        
         await queryInterface.createTable('providers', {
             provider_id: {
                 type: DataTypes.UUID,
@@ -48,7 +46,6 @@ module.exports = {
             }
         })
 
-        // Add the foreign key constraint back
         await queryInterface.addConstraint('medical_records', {
             fields: ['provider_id'],
             type: 'foreign key',
