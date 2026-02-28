@@ -15,6 +15,8 @@ STREAM_KEY = "audit_events"
 GROUP_NAME = "audit_service_group"
 CONSUMER_NAME = "audit_service_consumer"
 SCHEMA = load_json_schema("audit_event.json")
+NEW_MESSAGES = ">"
+PENDING_MESSAGES = "0"
 
 
 def start_worker(app):
@@ -53,17 +55,27 @@ def _ensure_consumer_group_exists(redis_client):
             return  # group already created, continue
         raise
 
-
 def _process_messages(redis_client, app):
+    stream_id = PENDING_MESSAGES
+    block_ms = None
+
     while True:
         results = redis_client.xreadgroup(
             GROUP_NAME,
             CONSUMER_NAME,
-            {STREAM_KEY: ">"},
+            {STREAM_KEY: stream_id},
             count=10,
-            block=5000,
+            block=block_ms,
         )
+        # Alternate between pending and new messages to avoid
+        # getting stuck in infinite pending message failure loop
         if not results:
+            if stream_id == PENDING_MESSAGES:
+                stream_id = NEW_MESSAGES
+                block_ms = 5000
+            else:
+                stream_id = PENDING_MESSAGES
+                block_ms = None
             continue
 
         _, messages = results[0]
@@ -79,6 +91,13 @@ def _process_messages(redis_client, app):
             except Exception as err:
                 print(f"Failed to process message {msg_id}: {err}")
                 traceback.print_exc()
+
+        if stream_id == PENDING_MESSAGES:
+            stream_id = NEW_MESSAGES
+            block_ms = 5000
+        else:
+            stream_id = PENDING_MESSAGES
+            block_ms = None
 
 
 def _process_message(app, fields):
