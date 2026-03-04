@@ -1,0 +1,673 @@
+{
+    "info": {
+        "name": "EHR System",
+        "description": "Complete Postman collection for the Distributed EHR System.\nAll requests go through the Nginx reverse proxy at localhost:8080.\n\nFolder structure:\n- Auth Service: registration, login, user management\n- Hospital Service: patients & medical records\n- Audit Service: audit events & patient timelines\n\nWorkflow:\n1. Register or Login to get a JWT token\n2. The token is automatically saved to the collection variable {{token}}\n3. All authenticated requests use Bearer {{token}}",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "patient_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "record_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "audit_event_id",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "description": "Authentication & user management endpoints.\nBase path: /api/v1/auth",
+            "item": [
+                {
+                    "name": "Register Patient",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"patient@example.com\",\n  \"password\": \"password123\",\n  \"ssn\": \"123456-7890\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "Register a new patient account. Only the PATIENT role can be created via this endpoint. Returns a JWT token on success."
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.collectionVariables.set('token', jsonData.token);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@hospital.com\",\n  \"password\": \"admin\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Log in with email and password. Returns a JWT token valid for 30 minutes. Default admin credentials: admin@hospital.com / admin"
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.collectionVariables.set('token', jsonData.token);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Current User",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "auth",
+                                "me"
+                            ]
+                        },
+                        "description": "Get the profile of the currently authenticated user. Requires a valid JWT token."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create User (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"doctor@hospital.com\",\n  \"password\": \"password123\",\n  \"role\": \"DOCTOR\",\n  \"ssn\": \"111111-1111\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/users",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "auth",
+                                "users"
+                            ]
+                        },
+                        "description": "Admin-only: Create a new user with a privileged role (DOCTOR, NURSE, or ADMIN). Requires ADMIN JWT token."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Hospital",
+            "description": "Hospital service endpoints for managing patients and medical records.\nBase path: /api/v1",
+            "item": [
+                {
+                    "name": "Patients",
+                    "description": "Patient management endpoints.\nBase path: /api/v1/patients",
+                    "item": [
+                        {
+                            "name": "Create Patient",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"date_of_birth\": \"1990-05-15\",\n  \"gender\": \"male\",\n  \"phone\": \"+358401234567\",\n  \"email\": \"john.doe@example.com\",\n  \"ssn\": \"123456-7890\",\n  \"blood_type\": \"A+\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/patients",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "patients"
+                                    ]
+                                },
+                                "description": "Create a new patient record. Requires DOCTOR or ADMIN role."
+                            },
+                            "response": [],
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "if (pm.response.code === 201) {",
+                                            "    var jsonData = pm.response.json();",
+                                            "    pm.collectionVariables.set('patient_id', jsonData.patient_id);",
+                                            "}"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "List Patients",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/patients?page=1&limit=20",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "patients"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "page",
+                                            "value": "1",
+                                            "description": "Page number (default: 1)"
+                                        },
+                                        {
+                                            "key": "limit",
+                                            "value": "20",
+                                            "description": "Results per page (default: 20)"
+                                        },
+                                        {
+                                            "key": "search",
+                                            "value": "",
+                                            "description": "Search by first or last name",
+                                            "disabled": true
+                                        }
+                                    ]
+                                },
+                                "description": "List all patients with optional search and pagination. Requires DOCTOR, NURSE, or ADMIN role."
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Get My Patient Profile",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/patients/me",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "patients",
+                                        "me"
+                                    ]
+                                },
+                                "description": "Get the authenticated patient's own profile including medical records. Requires PATIENT role."
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Get Patient by ID",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/patients/{{patient_id}}",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "patients",
+                                        "{{patient_id}}"
+                                    ]
+                                },
+                                "description": "Get a specific patient by ID. Requires DOCTOR, NURSE, ADMIN, or the patient themselves."
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Update Patient",
+                            "request": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"phone\": \"+358409999999\",\n  \"email\": \"john.updated@example.com\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/patients/{{patient_id}}",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "patients",
+                                        "{{patient_id}}"
+                                    ]
+                                },
+                                "description": "Update a patient's information. Requires DOCTOR, ADMIN, or the patient themselves."
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Delete Patient",
+                            "request": {
+                                "method": "DELETE",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/patients/{{patient_id}}",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "patients",
+                                        "{{patient_id}}"
+                                    ]
+                                },
+                                "description": "Delete a patient record. Requires ADMIN role."
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Patient Records",
+                    "description": "Medical records nested under a specific patient.\nBase path: /api/v1/patients/:patient_id/records",
+                    "item": [
+                        {
+                            "name": "Create Record for Patient",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"diagnosis\": \"Common cold\",\n  \"treatment\": \"Rest and fluids\",\n  \"notes\": \"Follow up in 1 week if symptoms persist\",\n  \"visit_date\": \"2026-02-27\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/patients/{{patient_id}}/records",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "patients",
+                                        "{{patient_id}}",
+                                        "records"
+                                    ]
+                                },
+                                "description": "Create a new medical record for a specific patient. Requires DOCTOR, NURSE, or ADMIN role."
+                            },
+                            "response": [],
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "if (pm.response.code === 201) {",
+                                            "    var jsonData = pm.response.json();",
+                                            "    pm.collectionVariables.set('record_id', jsonData.record_id);",
+                                            "}"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "List Records for Patient",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/patients/{{patient_id}}/records?page=1&limit=20",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "patients",
+                                        "{{patient_id}}",
+                                        "records"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "page",
+                                            "value": "1",
+                                            "description": "Page number (default: 1)"
+                                        },
+                                        {
+                                            "key": "limit",
+                                            "value": "20",
+                                            "description": "Results per page (default: 20)"
+                                        }
+                                    ]
+                                },
+                                "description": "List all medical records for a specific patient. Requires DOCTOR, NURSE, ADMIN, or the patient themselves."
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Records",
+                    "description": "Standalone medical record endpoints (by record ID).\nBase path: /api/v1/records",
+                    "item": [
+                        {
+                            "name": "Get Record by ID",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/records/{{record_id}}",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "records",
+                                        "{{record_id}}"
+                                    ]
+                                },
+                                "description": "Get a specific medical record by its ID. Requires DOCTOR, NURSE, ADMIN, or PATIENT (own records only)."
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Update Record",
+                            "request": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"diagnosis\": \"Updated diagnosis\",\n  \"treatment\": \"Updated treatment plan\",\n  \"notes\": \"Updated notes\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/records/{{record_id}}",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "records",
+                                        "{{record_id}}"
+                                    ]
+                                },
+                                "description": "Update a medical record. Requires DOCTOR or ADMIN role."
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Delete Record",
+                            "request": {
+                                "method": "DELETE",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/records/{{record_id}}",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "records",
+                                        "{{record_id}}"
+                                    ]
+                                },
+                                "description": "Delete a medical record. Requires ADMIN role."
+                            },
+                            "response": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Audit Service",
+            "description": "Audit log service for tracking all system activity.\nBase path: /api/v1/audit\nAll endpoints require ADMIN role JWT token.",
+            "item": [
+                {
+                    "name": "List Audit Events",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/audit/events/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "audit",
+                                "events",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "patient_id",
+                                    "value": "",
+                                    "description": "Filter by patient ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "actor_id",
+                                    "value": "",
+                                    "description": "Filter by actor (user) ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "action",
+                                    "value": "",
+                                    "description": "Filter by action (e.g. USER_LOGIN, PATIENT_CREATE, RECORD_CREATE)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "outcome",
+                                    "value": "",
+                                    "description": "Filter by outcome (ALLOW or DENY)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "from",
+                                    "value": "",
+                                    "description": "Filter events from this ISO datetime",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "to",
+                                    "value": "",
+                                    "description": "Filter events until this ISO datetime",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "List all audit events with optional filters. Requires ADMIN role."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Audit Event by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/audit/events/{{audit_event_id}}/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "audit",
+                                "events",
+                                "{{audit_event_id}}",
+                                ""
+                            ]
+                        },
+                        "description": "Get a specific audit event by its ID. Requires ADMIN role."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Patient Timeline",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/audit/patients/{{patient_id}}/timeline/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "audit",
+                                "patients",
+                                "{{patient_id}}",
+                                "timeline",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "from",
+                                    "value": "",
+                                    "description": "Filter events from this ISO datetime",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "to",
+                                    "value": "",
+                                    "description": "Filter events until this ISO datetime",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get the complete audit timeline for a specific patient. Requires ADMIN role."
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}
