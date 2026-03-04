@@ -18,7 +18,7 @@ Make sure the following are installed on your system:
 
 ## Running the Application
 
-The entire system is orchestrated with a single Docker Compose file. Start all services by running in the root directory:
+The entire system is orchestrated with a single Docker Compose file. To start all services, run the following command in the project root directory:
 
 ```bash
 docker compose -f docker-compose.dev.yml up --build
