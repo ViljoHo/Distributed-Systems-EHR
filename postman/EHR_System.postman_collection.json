@@ -213,7 +213,7 @@
                                 ],
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"date_of_birth\": \"1990-05-15\",\n  \"gender\": \"male\",\n  \"phone\": \"+358401234567\",\n  \"email\": \"john.doe@example.com\",\n  \"ssn\": \"123456-7890\",\n  \"blood_type\": \"A+\"\n}"
+                                    "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"date_of_birth\": \"1990-05-15\",\n  \"gender\": \"MALE\",\n  \"phone\": \"+358401234567\",\n  \"email\": \"patient@example.com\",\n  \"ssn\": \"123456-7890\",\n  \"blood_type\": \"A+\"\n}"
                                 },
                                 "url": {
                                     "raw": "{{baseUrl}}/api/v1/patients",
